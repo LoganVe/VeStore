@@ -1,7 +1,14 @@
 [
   {
+    "id": "1058352910945",
+    "url": "https://www.goofish.com/item?id=1058352910945",
+    "title": "Carol Christian Poell U sole C CP 9号其实是43-44，一双非常漂亮稀有的鞋子，状态极好",
+    "price": 11999,
+    "currency": "CNY",
+    "freeShipping": true,
+    "badges": ["9小时前发布"],
     "city": "北京",
-    "pictureUrl": "https://img.alicdn.com/sample.jpg",
+    "pictureUrl": "http://img.alicdn.com/bao/uploaded/i3/O1CN010oSfgr1PROih1G0za_!!4611686018427384669-53-fleamarket.heic",
     "postedAt": "2026-06-15T16:01:06+08:00",
     "postedAtEpochMs": 1781510466000,
     "listingType": "detailCommonBuy",
@@ -12,22 +19,68 @@
     "taobaoCategoryId": "50012906",
     "seller": {
       "name": "dexter",
-      "avatarUrl": "https://img.alicdn.com/sample-avatar.jpg",
+      "avatarUrl": "https://img.alicdn.com/bao/uploaded/i4/O1CN01OhAfw51PROhjxK4Ty_!!4611686018427384669-0-mtopupload.jpg",
       "identity": "",
       "refId": "CJ8xAsqiW+mjBl9Cg/5nKg==",
       "reviewsLabel": "0条评价"
     },
     "detailStatus": "summary",
     "detailError": null
-  }
-][
+  },
   {
+    "id": "1059349141993",
+    "url": "https://www.goofish.com/item?id=1059349141993",
+    "title": "Carol Christian Poell workboot s 尺码8适合43-44，非常漂亮",
+    "price": 12999,
+    "currency": "CNY",
+    "freeShipping": true,
+    "badges": ["9小时前发布", "1人想要"],
     "city": "北京",
-    "pictureUrl": "https://img.alicdn.com/sample.jpg",
-    "postedAt": "2026-06-15T16:01:06+08:00",
+    "pictureUrl": "http://img.alicdn.com/bao/uploaded/i4/O1CN01OcJzyL1PROigs87Tr_!!4611686018427384669-53-xy_item.heic",
+    "postedAt": "2026-06-15T15:57:58+08:00",
+    "postedAtEpochMs": 1781510278000,
+    "listingType": "detailCommonBuy",
+    "isAuction": false,
+    "hasVideo": false,
+    "isAd": false,
+    "categoryId": "50112002",
+    "taobaoCategoryId": "50012907",
     "seller": {
       "name": "dexter",
-      "refId": "CJ8xAsqiW+mjBl9Cg/5nKg=="
-    }
+      "avatarUrl": "https://img.alicdn.com/bao/uploaded/i4/O1CN01OhAfw51PROhjxK4Ty_!!4611686018427384669-0-mtopupload.jpg",
+      "identity": "",
+      "refId": "CJ8xAsqiW+mjBl9Cg/5nKg==",
+      "reviewsLabel": "0条评价"
+    },
+    "detailStatus": "summary",
+    "detailError": null
+  },
+  {
+    "id": "1060248320578",
+    "url": "https://www.goofish.com/item?id=1060248320578",
+    "title": "Carol Christian Poell 2609 ccp 军靴 sz7",
+    "price": 12500,
+    "currency": "CNY",
+    "freeShipping": true,
+    "badges": ["10小时前发布"],
+    "city": "湖北",
+    "pictureUrl": "http://img.alicdn.com/bao/uploaded/i2/2215036548019/O1CN01vEiWjh296lCN0X5f0_!!4611686018427384755-53-xy_item.heic",
+    "postedAt": "2026-06-15T14:35:34+08:00",
+    "postedAtEpochMs": 1781505334000,
+    "listingType": "detailCommonBuy",
+    "isAuction": false,
+    "hasVideo": false,
+    "isAd": false,
+    "categoryId": "50112002",
+    "taobaoCategoryId": "50011743",
+    "seller": {
+      "name": "小能谁尼",
+      "avatarUrl": "https://img.alicdn.com/bao/uploaded/i4/O1CN01GuRS8f296l9fdz7qH_!!4611686018427384755-0-mtopupload.jpg",
+      "identity": "",
+      "refId": "o9GJojlZ+l5qgRVtymtXlg==",
+      "reviewsLabel": "0条评价"
+    },
+    "detailStatus": "summary",
+    "detailError": null
   }
 ]
