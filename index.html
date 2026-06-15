@@ -13,30 +13,25 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
-    }
-
-    #app {
-      max-width: 600px;
-      margin: auto;
     }
 
     .card {
       background: white;
       padding: 15px;
-      margin-bottom: 15px;
+      margin: 15px auto;
+      max-width: 500px;
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
-      transition: 0.2s;
     }
 
     .card:hover {
       transform: scale(1.01);
+      transition: 0.2s;
     }
 
     img {
-      width: 100%;
+      max-width: 100%;
       border-radius: 8px;
     }
 
@@ -56,7 +51,6 @@
     .error {
       color: red;
       text-align: center;
-      margin-top: 20px;
     }
   </style>
 </head>
@@ -64,60 +58,57 @@
 <body>
 
 <h1>VeArchive</h1>
-<div id="app">Loading...</div>
+<div id="app"></div>
 
 <script>
-const app = document.getElementById("app");
+const DATA_URL = "./data.json"; 
+// IMPORTANT: works if data.json is in same folder as index.html in VeStore
 
-// IMPORTANT: relative path works on GitHub Pages
-fetch("./data.json", { cache: "no-store" })
+fetch(DATA_URL)
   .then(res => {
-    if (!res.ok) throw new Error("HTTP " + res.status);
+    if (!res.ok) throw new Error("HTTP error " + res.status);
     return res.json();
   })
   .then(data => {
-    render(data);
+    const app = document.getElementById("app");
+    app.innerHTML = "";
+
+    data.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      // FIX IMAGE (force https fallback)
+      const imgUrl = item.pictureUrl?.replace("http://", "https://");
+
+      card.innerHTML = `
+        <h3>${item.title || "No title"}</h3>
+        <p><strong>${item.city || ""}</strong></p>
+
+        <img src="${imgUrl}" onerror="this.style.display='none'" />
+
+        <div class="seller">
+          <img class="avatar" src="${item.seller?.avatarUrl}" />
+          <div>
+            <strong>${item.seller?.name || ""}</strong><br/>
+            <small>${item.seller?.reviewsLabel || ""}</small>
+          </div>
+        </div>
+      `;
+
+      // CLICK = open detail page
+      card.onclick = () => {
+        localStorage.setItem("selectedItem", JSON.stringify(item));
+        window.location.href = "item.html";
+      };
+
+      app.appendChild(card);
+    });
   })
   .catch(err => {
+    document.getElementById("app").innerHTML =
+      `<div class="error">❌ Failed to load data.json</div>`;
     console.error(err);
-    app.innerHTML = `
-      <div class="error">
-        ❌ Failed to load data.json<br><br>
-        Fix checklist:<br>
-        • data.json is in same folder as index.html<br>
-        • GitHub Pages is deployed<br>
-        • Open data.json directly in browser<br>
-      </div>
-    `;
   });
-
-function render(data) {
-  app.innerHTML = "";
-
-  data.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.onclick = () => {
-      window.location.href = `detail.html?id=${item.id}`;
-    };
-
-    card.innerHTML = `
-      <h3>${item.city || "Unknown City"}</h3>
-      <img src="${item.pictureUrl}" />
-
-      <div class="seller">
-        <img class="avatar" src="${item.seller?.avatarUrl || ""}" />
-        <div>
-          <strong>${item.seller?.name || "Unknown"}</strong><br/>
-          <small>${item.seller?.reviewsLabel || ""}</small>
-        </div>
-      </div>
-    `;
-
-    app.appendChild(card);
-  });
-}
 </script>
 
 </body>
