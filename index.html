@@ -1,106 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <title>VeArchive</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f7f7f7;
-    }
-
-    h1 {
-      text-align: center;
-    }
-
-    .card {
-      background: white;
-      padding: 15px;
-      margin: 15px auto;
-      max-width: 500px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    img {
-      max-width: 100%;
-      border-radius: 8px;
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-
-    .seller {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .avatar {
-      width: 35px;
-      height: 35px;
-      border-radius: 50%;
-    }
-  </style>
-</head>
-
-<body>
-
-<h1>VeArchive</h1>
-<div id="app"></div>
-
 <script>
   fetch('./data.json')
-  .then(r => {
-    if (!r.ok) throw new Error("data.json not found");
-    return r.json();
-  })
-  .then(data => {
-    console.log("Loaded:", data);
-  })
-  .catch(err => {
-    console.error("ERROR:", err);
-  });
-fetch('data.json')
-  .then(res => res.json())
-  .then(data => {
-    const app = document.getElementById("app");
+    .then(res => {
+      if (!res.ok) throw new Error("data.json not found");
+      return res.json();
+    })
+    .then(data => {
+      const app = document.getElementById("app");
 
-    data.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card";
+      data.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
 
-      card.innerHTML = `
-        <h3>${item.city}</h3>
-        <img src="${item.pictureUrl}" />
+        card.innerHTML = `
+          <h3>${item.city}</h3>
+          <img src="${item.pictureUrl}" />
 
-        <div class="seller">
-          <img class="avatar" src="${item.seller?.avatarUrl}" />
-          <div>
-            <strong>${item.seller?.name}</strong><br/>
-            <small>${item.seller?.reviewsLabel}</small>
+          <div class="seller">
+            <img class="avatar" src="${item.seller?.avatarUrl}" />
+            <div>
+              <strong>${item.seller?.name}</strong><br/>
+              <small>${item.seller?.reviewsLabel}</small>
+            </div>
           </div>
-        </div>
 
-        <button onclick="contact('${item.seller?.refId}')">
-          Contact Seller
-        </button>
-      `;
+          <button onclick="contact('${item.seller?.refId}')">
+            Contact Seller
+          </button>
+        `;
 
-      app.appendChild(card);
+        // ✅ THIS IS WHAT YOU WERE MISSING
+        card.onclick = () => {
+          window.location.href = `item.html?id=${item.id}`;
+        };
+
+        app.appendChild(card);
+      });
+    })
+    .catch(err => {
+      console.error("ERROR:", err);
     });
-  });
 
 function contact(refId) {
   alert("Contact seller ID: " + refId);
 }
 </script>
-
-</body>
-</html>
