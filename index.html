@@ -60,46 +60,7 @@
 <div id="app"></div>
 
 <script>
-fetch("data.json")
-  .then(res => {
-    console.log("STATUS:", res.status);
-    if (!res.ok) throw new Error("data.json not found");
-    return res.json();
-  })
-  .then(data => {
-    console.log("LOADED DATA:", data);
-
-    const app = document.getElementById("app");
-    app.innerHTML = "";
-
-    data.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card";
-
-      card.innerHTML = `
-        <h3>${item.title}</h3>
-        <p><b>${item.city}</b> • ${item.price} ${item.currency}</p>
-        <img src="${item.pictureUrl}" />
-
-        <div class="seller">
-          <img class="avatar" src="${item.seller.avatarUrl}" />
-          <div>
-            <strong>${item.seller.name}</strong><br/>
-            <small>${item.seller.reviewsLabel}</small>
-          </div>
-        </div>
-      `;
-
-      card.onclick = () => window.location.href = item.url;
-
-      app.appendChild(card);
-    });
-  })
-  .catch(err => {
-    console.error("FULL ERROR:", err);
-    document.getElementById("app").innerHTML =
-      "❌ Failed to load data.json";
-  });
+const BASE = window.location.pathname
 </script>
 
 </body>
