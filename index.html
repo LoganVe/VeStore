@@ -13,13 +13,18 @@
 
     h1 {
       text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #app {
+      max-width: 600px;
+      margin: auto;
     }
 
     .card {
       background: white;
       padding: 15px;
-      margin: 15px auto;
-      max-width: 500px;
+      margin-bottom: 15px;
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
@@ -31,7 +36,7 @@
     }
 
     img {
-      max-width: 100%;
+      width: 100%;
       border-radius: 8px;
     }
 
@@ -59,15 +64,13 @@
 <body>
 
 <h1>VeArchive</h1>
-<div id="app"></div>
+<div id="app">Loading...</div>
 
 <script>
 const app = document.getElementById("app");
 
-// 🔥 FIXED PATH (THIS IS THE IMPORTANT PART)
-const BASE = "/VeStore";
-
-fetch(`${BASE}/data.json`, { cache: "no-store" })
+// IMPORTANT: relative path works on GitHub Pages
+fetch("./data.json", { cache: "no-store" })
   .then(res => {
     if (!res.ok) throw new Error("HTTP " + res.status);
     return res.json();
@@ -80,11 +83,10 @@ fetch(`${BASE}/data.json`, { cache: "no-store" })
     app.innerHTML = `
       <div class="error">
         ❌ Failed to load data.json<br><br>
-        Check:<br>
-        • data.json is in /VeStore/<br>
-        • GitHub Pages is enabled<br>
-        • This URL works:<br>
-        https://loganve.github.io/VeStore/data.json
+        Fix checklist:<br>
+        • data.json is in same folder as index.html<br>
+        • GitHub Pages is deployed<br>
+        • Open data.json directly in browser<br>
       </div>
     `;
   });
@@ -96,17 +98,16 @@ function render(data) {
     const card = document.createElement("div");
     card.className = "card";
 
-    // CLICK → detail page
     card.onclick = () => {
       window.location.href = `detail.html?id=${item.id}`;
     };
 
     card.innerHTML = `
-      <h3>${item.city || "Unknown"}</h3>
+      <h3>${item.city || "Unknown City"}</h3>
       <img src="${item.pictureUrl}" />
 
       <div class="seller">
-        <img class="avatar" src="${item.seller?.avatarUrl || ''}" />
+        <img class="avatar" src="${item.seller?.avatarUrl || ""}" />
         <div>
           <strong>${item.seller?.name || "Unknown"}</strong><br/>
           <small>${item.seller?.reviewsLabel || ""}</small>
