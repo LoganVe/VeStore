@@ -64,16 +64,12 @@
 <script>
 const app = document.getElementById("app");
 
-/*
-  IMPORTANT FIX:
-  - ./data.json is required for GitHub Pages subpaths
-  - cache: no-store prevents stale builds
-*/
-fetch("./data.json", { cache: "no-store" })
+// 🔥 FIXED PATH (THIS IS THE IMPORTANT PART)
+const BASE = "/VeStore";
+
+fetch(`${BASE}/data.json`, { cache: "no-store" })
   .then(res => {
-    if (!res.ok) {
-      throw new Error("HTTP error " + res.status);
-    }
+    if (!res.ok) throw new Error("HTTP " + res.status);
     return res.json();
   })
   .then(data => {
@@ -84,10 +80,11 @@ fetch("./data.json", { cache: "no-store" })
     app.innerHTML = `
       <div class="error">
         ❌ Failed to load data.json<br><br>
-        Make sure:
-        <br>• data.json is in same folder as index.html
-        <br>• GitHub Pages is deployed
-        <br>• You can open /data.json directly in browser
+        Check:<br>
+        • data.json is in /VeStore/<br>
+        • GitHub Pages is enabled<br>
+        • This URL works:<br>
+        https://loganve.github.io/VeStore/data.json
       </div>
     `;
   });
@@ -99,19 +96,19 @@ function render(data) {
     const card = document.createElement("div");
     card.className = "card";
 
-    // CLICK = go to detail page
+    // CLICK → detail page
     card.onclick = () => {
       window.location.href = `detail.html?id=${item.id}`;
     };
 
     card.innerHTML = `
-      <h3>${item.city || "Unknown City"}</h3>
+      <h3>${item.city || "Unknown"}</h3>
       <img src="${item.pictureUrl}" />
 
       <div class="seller">
         <img class="avatar" src="${item.seller?.avatarUrl || ''}" />
         <div>
-          <strong>${item.seller?.name || "Unknown Seller"}</strong><br/>
+          <strong>${item.seller?.name || "Unknown"}</strong><br/>
           <small>${item.seller?.reviewsLabel || ""}</small>
         </div>
       </div>
