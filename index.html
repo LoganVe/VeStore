@@ -13,25 +13,16 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
-    }
-
-    #app {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      align-items: center;
     }
 
     .card {
       background: white;
       padding: 15px;
-      width: 100%;
+      margin: 15px auto;
       max-width: 500px;
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
-      transition: transform 0.15s ease;
     }
 
     .card:hover {
@@ -41,12 +32,6 @@
     img {
       max-width: 100%;
       border-radius: 8px;
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 8px 12px;
-      cursor: pointer;
     }
 
     .seller {
@@ -62,9 +47,9 @@
       border-radius: 50%;
     }
 
-    .loading {
+    .error {
+      color: red;
       text-align: center;
-      color: #555;
     }
   </style>
 </head>
@@ -72,75 +57,50 @@
 <body>
 
 <h1>VeArchive</h1>
-<div id="app" class="loading">Loading listings...</div>
+<div id="app"></div>
 
 <script>
-  async function loadListings() {
+fetch("./data.json")
+  .then(res => {
+    if (!res.ok) throw new Error("data.json not found");
+    return res.json();
+  })
+  .then(data => {
     const app = document.getElementById("app");
 
-    try {
-      // ✅ GitHub Pages safe fetch
-      const res = await fetch('data.json');
+    data.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
 
-      if (!res.ok) {
-        throw new Error("data.json not found");
-      }
+      card.innerHTML = `
+        <h3>${item.title}</h3>
+        <p><b>${item.city}</b> • ${item.price} ${item.currency}</p>
 
-      const data = await res.json();
+        <img src="${item.pictureUrl}" />
 
-      app.innerHTML = "";
-
-      data.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        card.innerHTML = `
-          <h3>${item.city || 'Unknown City'}</h3>
-
-          <img src="${item.pictureUrl}" />
-
-          <div class="seller">
-            <img class="avatar" src="${item.seller?.avatarUrl || ''}" />
-            <div>
-              <strong>${item.seller?.name || 'Unknown'}</strong><br/>
-              <small>${item.seller?.reviewsLabel || ''}</small>
-            </div>
+        <div class="seller">
+          <img class="avatar" src="${item.seller.avatarUrl}" />
+          <div>
+            <strong>${item.seller.name}</strong><br/>
+            <small>${item.seller.reviewsLabel}</small>
           </div>
-
-          <button onclick="contact(event, '${item.seller?.refId || ''}')">
-            Contact Seller
-          </button>
-        `;
-
-        // ✅ click card → open item page
-        card.addEventListener("click", (e) => {
-          if (e.target.tagName === "BUTTON") return;
-          window.location.href = `item.html?id=${item.id}`;
-        });
-
-        app.appendChild(card);
-      });
-
-    } catch (err) {
-      console.error(err);
-      app.innerHTML = `
-        <div style="color:red;text-align:center;">
-          ❌ Failed to load data.json<br><br>
-          Fix checklist:<br>
-          • data.json is in repo root<br>
-          • GitHub Pages is deployed<br>
-          • open /VeStore/data.json in browser
         </div>
+
+        <button>View Item</button>
       `;
-    }
-  }
 
-  function contact(e, refId) {
-    e.stopPropagation();
-    alert("Contact seller ID: " + refId);
-  }
+      card.onclick = () => {
+        window.location.href = item.url;
+      };
 
-  loadListings();
+      app.appendChild(card);
+    });
+  })
+  .catch(err => {
+    document.getElementById("app").innerHTML =
+      "<p class='error'>❌ Failed to load data.json</p>";
+    console.error(err);
+  });
 </script>
 
 </body>
