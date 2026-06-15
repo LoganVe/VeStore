@@ -1,163 +1,200 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>VeArchive</title>
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #0f0f0f;
-    color: white;
-    margin: 0;
-    padding: 20px;
-  }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
 
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
+body{
+  background:#0f0f0f;
+  color:white;
+  font-family:Arial,sans-serif;
+  padding:20px;
+}
 
-  .header h1 {
-    margin: 0;
-    font-size: 42px;
-    font-weight: 700;
-    letter-spacing: 2px;
-  }
+h1{
+  text-align:center;
+  margin-bottom:25px;
+  font-size:32px;
+}
 
-  .header p {
-    margin-top: 8px;
-    color: #888;
-    font-size: 14px;
-  }
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:18px;
+}
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
-  }
+.card{
+  background:#1a1a1a;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid #2a2a2a;
+}
 
-  .card {
-    background: #1b1b1b;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    transition: 0.2s ease;
-  }
+.card img{
+  width:100%;
+  height:300px;
+  object-fit:cover;
+  display:block;
+  background:#000;
+}
 
-  .card:hover {
-    transform: scale(1.02);
-  }
+.content{
+  padding:14px;
+}
 
-  .card img {
-    width: 100%;
-    height: 280px;
-    object-fit: cover;
-    background: #000;
-    display: block;
-  }
+.title{
+  font-size:14px;
+  line-height:1.4;
+  margin-bottom:10px;
+}
 
-  .content {
-    padding: 12px;
-  }
+.price{
+  color:#00ff88;
+  font-weight:bold;
+  margin-bottom:8px;
+}
 
-  .title {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    line-height: 1.3;
-    max-height: 52px;
-    overflow: hidden;
-  }
+.meta{
+  color:#999;
+  font-size:12px;
+  margin-bottom:12px;
+}
 
-  .price {
-    color: #00ff99;
-    font-weight: bold;
-    margin-bottom: 6px;
-    font-size: 16px;
-  }
+.button{
+  display:inline-block;
+  padding:8px 12px;
+  background:#2a2a2a;
+  color:white;
+  text-decoration:none;
+  border-radius:6px;
+}
 
-  .meta {
-    font-size: 11px;
-    color: #aaa;
-    margin-bottom: 10px;
-  }
+.button:hover{
+  background:#3a3a3a;
+}
 
-  a {
-    display: inline-block;
-    padding: 6px 10px;
-    background: #2a2a2a;
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-size: 12px;
-  }
-
-  a:hover {
-    background: #444;
-  }
+.loading{
+  text-align:center;
+  padding:50px;
+  color:#888;
+}
 </style>
-
 </head>
 
 <body>
 
-<div class="header">
-  <h1>VeArchive</h1>
-  <p>Fashion Archive Marketplace</p>
+<h1>VeArchive</h1>
+
+<div id="listings" class="grid">
+  <div class="loading">Loading listings...</div>
 </div>
 
-<div class="grid" id="listings"></div>
-
 <script>
-fetch('./data.json')
-  .then(res => res.json())
-  .then(data => {
 
-    const container = document.getElementById("listings");
+const container = document.getElementById("listings");
+
+async function loadListings(){
+
+  try{
+
+    const response = await fetch("./data.json");
+
+    if(!response.ok){
+      throw new Error("Failed to load data.json");
+    }
+
+    const data = await response.json();
+
+    container.innerHTML = "";
 
     data.forEach(item => {
 
       const card = document.createElement("div");
       card.className = "card";
 
-      const imgUrl =
-        "https://images.weserv.nl/?url=" +
-        encodeURIComponent(
-          item.pictureUrl
-            .replace("http://", "")
-            .replace("https://", "")
-        );
+      let imageUrl = "";
+
+      if(item.pictureUrl){
+
+        const cleanUrl = item.pictureUrl
+          .replace(/^https?:\/\//,'');
+
+        imageUrl =
+          "https://images.weserv.nl/?url=" +
+          encodeURIComponent(cleanUrl);
+
+      }
 
       card.innerHTML = `
         <img
-          src="${imgUrl}"
-          alt="${item.title}"
-          onerror="this.src='https://placehold.co/600x400?text=No+Image'"
+          src="${imageUrl}"
+          alt="${item.title || ''}"
+          loading="lazy"
+          onerror="this.src='https://placehold.co/600x800?text=No+Image';"
         >
 
         <div class="content">
-          <div class="title">${item.title}</div>
-          <div class="price">¥${item.price}</div>
-          <div class="meta">${item.city || ''}</div>
 
-          <a href="${item.url}" target="_blank">
+          <div class="title">
+            ${item.title || "Untitled"}
+          </div>
+
+          <div class="price">
+            ¥${Number(item.price || 0).toLocaleString()}
+          </div>
+
+          <div class="meta">
+            ${item.city || "Unknown"}<br>
+            ${item.postedAt ? item.postedAt.slice(0,10) : ""}
+          </div>
+
+          <a
+            class="button"
+            href="${item.url || '#'}"
+            target="_blank"
+          >
             View Listing
           </a>
+
         </div>
       `;
 
       container.appendChild(card);
+
     });
 
-  })
-  .catch(err => {
-    console.error(err);
-    document.getElementById("listings").innerHTML =
-      "<h2>Failed to load data.json</h2>";
-  });
+  }catch(error){
+
+    console.error(error);
+
+    container.innerHTML = `
+      <div class="loading">
+        Failed to load data.json<br><br>
+        Make sure:
+        <br><br>
+        1. data.json is in the same folder as index.html
+        <br>
+        2. You're using GitHub Pages, Vercel, Netlify, or Live Server
+        <br>
+        3. data.json contains valid JSON
+      </div>
+    `;
+
+  }
+
+}
+
+loadListings();
+
 </script>
 
 </body>
