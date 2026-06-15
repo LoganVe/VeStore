@@ -6,7 +6,7 @@
 
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       margin: 20px;
       background: #f7f7f7;
     }
@@ -23,6 +23,11 @@
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.01);
     }
 
     img {
@@ -44,8 +49,9 @@
     }
 
     .error {
-      text-align: center;
       color: red;
+      text-align: center;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -58,8 +64,12 @@
 <script>
 const app = document.getElementById("app");
 
-// FIXED: only ONE fetch, with proper error handling
-fetch("./data.json")
+/*
+  IMPORTANT FIX:
+  - ./data.json is required for GitHub Pages subpaths
+  - cache: no-store prevents stale builds
+*/
+fetch("./data.json", { cache: "no-store" })
   .then(res => {
     if (!res.ok) {
       throw new Error("HTTP error " + res.status);
@@ -74,10 +84,10 @@ fetch("./data.json")
     app.innerHTML = `
       <div class="error">
         ❌ Failed to load data.json<br><br>
-        Check:
-        <br>• file is in same folder as index.html
-        <br>• GitHub Pages is updated
-        <br>• data.json opens directly in browser
+        Make sure:
+        <br>• data.json is in same folder as index.html
+        <br>• GitHub Pages is deployed
+        <br>• You can open /data.json directly in browser
       </div>
     `;
   });
@@ -89,18 +99,19 @@ function render(data) {
     const card = document.createElement("div");
     card.className = "card";
 
+    // CLICK = go to detail page
     card.onclick = () => {
       window.location.href = `detail.html?id=${item.id}`;
     };
 
     card.innerHTML = `
-      <h3>${item.city || ""}</h3>
+      <h3>${item.city || "Unknown City"}</h3>
       <img src="${item.pictureUrl}" />
 
       <div class="seller">
         <img class="avatar" src="${item.seller?.avatarUrl || ''}" />
         <div>
-          <strong>${item.seller?.name || ""}</strong><br/>
+          <strong>${item.seller?.name || "Unknown Seller"}</strong><br/>
           <small>${item.seller?.reviewsLabel || ""}</small>
         </div>
       </div>
