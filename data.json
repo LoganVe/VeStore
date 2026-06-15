@@ -3,6 +3,28 @@
     "city": "北京",
     "pictureUrl": "https://img.alicdn.com/sample.jpg",
     "postedAt": "2026-06-15T16:01:06+08:00",
+    "postedAtEpochMs": 1781510466000,
+    "listingType": "detailCommonBuy",
+    "isAuction": false,
+    "hasVideo": false,
+    "isAd": false,
+    "categoryId": "50112002",
+    "taobaoCategoryId": "50012906",
+    "seller": {
+      "name": "dexter",
+      "avatarUrl": "https://img.alicdn.com/sample-avatar.jpg",
+      "identity": "",
+      "refId": "CJ8xAsqiW+mjBl9Cg/5nKg==",
+      "reviewsLabel": "0条评价"
+    },
+    "detailStatus": "summary",
+    "detailError": null
+  }
+][
+  {
+    "city": "北京",
+    "pictureUrl": "https://img.alicdn.com/sample.jpg",
+    "postedAt": "2026-06-15T16:01:06+08:00",
     "seller": {
       "name": "dexter",
       "refId": "CJ8xAsqiW+mjBl9Cg/5nKg=="
