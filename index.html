@@ -60,7 +60,60 @@
 <div id="app"></div>
 
 <script>
-const BASE = window.location.pathname
+document.addEventListener("DOMContentLoaded", () => {
+  const app = document.getElementById("app");
+
+  if (!app) {
+    console.error("❌ #app not found in HTML");
+    return;
+  }
+
+  const url = "./data.json";
+
+  console.log("📦 Loading:", url);
+
+  fetch(url)
+    .then(res => {
+      console.log("📡 STATUS:", res.status);
+      if (!res.ok) throw new Error("Failed to load data.json");
+      return res.json();
+    })
+    .then(data => {
+      console.log("✅ DATA LOADED:", data);
+
+      app.innerHTML = "";
+
+      data.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <h3>${item.title || "No title"}</h3>
+          <p><b>${item.city || ""}</b> • ${item.price || ""} ${item.currency || ""}</p>
+
+          <img src="${item.pictureUrl || ""}" />
+
+          <div class="seller">
+            <img class="avatar" src="${item.seller?.avatarUrl || ""}" />
+            <div>
+              <strong>${item.seller?.name || "Unknown"}</strong><br/>
+              <small>${item.seller?.reviewsLabel || ""}</small>
+            </div>
+          </div>
+        `;
+
+        card.onclick = () => {
+          window.location.href = item.url;
+        };
+
+        app.appendChild(card);
+      });
+    })
+    .catch(err => {
+      console.error("❌ ERROR:", err);
+      app.innerHTML = "<p style='color:red'>❌ Failed to load data.json</p>";
+    });
+});
 </script>
 
 </body>
