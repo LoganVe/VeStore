@@ -113,41 +113,60 @@
 
 <script>
 
-// PASTE YOUR JSON DATA HERE
-const data = [
-  // your JSON goes here
-];
+<script src="data.js"></script>
 
+<script>
 const container = document.getElementById("listings");
 
-data.forEach(item => {
-  const card = document.createElement("div");
-  card.className = "card";
+if (!Array.isArray(data)) {
+  container.innerHTML =
+    "<h2>data.js failed to load</h2>";
+} else {
 
-  card.innerHTML = `
-    <img src="${item.pictureUrl}"
-         alt="${item.title}"
-         loading="lazy">
+  data.forEach(item => {
 
-    <div class="content">
-      <div class="title">${item.title}</div>
+    const card = document.createElement("div");
+    card.className = "card";
 
-      <div class="price">
-        ¥${Number(item.price).toLocaleString()}
+    const imgUrl =
+      "https://images.weserv.nl/?url=" +
+      encodeURIComponent(
+        item.pictureUrl
+          .replace("http://", "")
+          .replace("https://", "")
+      );
+
+    card.innerHTML = `
+      <img
+        src="${imgUrl}"
+        alt="${item.title}"
+        loading="lazy"
+        onerror="this.src='https://placehold.co/600x400?text=No+Image'"
+      >
+
+      <div class="content">
+        <div class="title">${item.title}</div>
+
+        <div class="price">
+          ¥${Number(item.price).toLocaleString()}
+        </div>
+
+        <div class="meta">
+          ${item.city || "Unknown"}
+        </div>
+
+        <a href="${item.url}" target="_blank">
+          View Listing
+        </a>
       </div>
+    `;
 
-      <div class="meta">
-        ${item.city || ''} • ${item.postedAt ? item.postedAt.slice(0,10) : ''}
-      </div>
+    container.appendChild(card);
 
-      <a href="${item.url}" target="_blank">
-        View Listing
-      </a>
-    </div>
-  `;
+  });
 
-  container.appendChild(card);
-});
+}
+</script>
 
 </script>
 
