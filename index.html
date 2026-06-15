@@ -62,11 +62,15 @@
 <script>
 fetch("./data.json")
   .then(res => {
+    console.log("STATUS:", res.status);
     if (!res.ok) throw new Error("data.json not found");
     return res.json();
   })
   .then(data => {
+    console.log("LOADED DATA:", data);
+
     const app = document.getElementById("app");
+    app.innerHTML = "";
 
     data.forEach(item => {
       const card = document.createElement("div");
@@ -75,7 +79,6 @@ fetch("./data.json")
       card.innerHTML = `
         <h3>${item.title}</h3>
         <p><b>${item.city}</b> • ${item.price} ${item.currency}</p>
-
         <img src="${item.pictureUrl}" />
 
         <div class="seller">
@@ -85,21 +88,17 @@ fetch("./data.json")
             <small>${item.seller.reviewsLabel}</small>
           </div>
         </div>
-
-        <button>View Item</button>
       `;
 
-      card.onclick = () => {
-        window.location.href = item.url;
-      };
+      card.onclick = () => window.location.href = item.url;
 
       app.appendChild(card);
     });
   })
   .catch(err => {
+    console.error("FULL ERROR:", err);
     document.getElementById("app").innerHTML =
-      "<p class='error'>❌ Failed to load data.json</p>";
-    console.error(err);
+      "❌ Failed to load data.json";
   });
 </script>
 
