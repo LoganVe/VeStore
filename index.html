@@ -112,62 +112,52 @@
 <div class="grid" id="listings"></div>
 
 <script>
+fetch('./data.json')
+  .then(res => res.json())
+  .then(data => {
 
-<script src="data.js"></script>
+    const container = document.getElementById("listings");
 
-<script>
-const container = document.getElementById("listings");
+    data.forEach(item => {
 
-if (!Array.isArray(data)) {
-  container.innerHTML =
-    "<h2>data.js failed to load</h2>";
-} else {
+      const card = document.createElement("div");
+      card.className = "card";
 
-  data.forEach(item => {
+      const imgUrl =
+        "https://images.weserv.nl/?url=" +
+        encodeURIComponent(
+          item.pictureUrl
+            .replace("http://", "")
+            .replace("https://", "")
+        );
 
-    const card = document.createElement("div");
-    card.className = "card";
+      card.innerHTML = `
+        <img
+          src="${imgUrl}"
+          alt="${item.title}"
+          onerror="this.src='https://placehold.co/600x400?text=No+Image'"
+        >
 
-    const imgUrl =
-      "https://images.weserv.nl/?url=" +
-      encodeURIComponent(
-        item.pictureUrl
-          .replace("http://", "")
-          .replace("https://", "")
-      );
+        <div class="content">
+          <div class="title">${item.title}</div>
+          <div class="price">¥${item.price}</div>
+          <div class="meta">${item.city || ''}</div>
 
-    card.innerHTML = `
-      <img
-        src="${imgUrl}"
-        alt="${item.title}"
-        loading="lazy"
-        onerror="this.src='https://placehold.co/600x400?text=No+Image'"
-      >
-
-      <div class="content">
-        <div class="title">${item.title}</div>
-
-        <div class="price">
-          ¥${Number(item.price).toLocaleString()}
+          <a href="${item.url}" target="_blank">
+            View Listing
+          </a>
         </div>
+      `;
 
-        <div class="meta">
-          ${item.city || "Unknown"}
-        </div>
+      container.appendChild(card);
+    });
 
-        <a href="${item.url}" target="_blank">
-          View Listing
-        </a>
-      </div>
-    `;
-
-    container.appendChild(card);
-
+  })
+  .catch(err => {
+    console.error(err);
+    document.getElementById("listings").innerHTML =
+      "<h2>Failed to load data.json</h2>";
   });
-
-}
-</script>
-
 </script>
 
 </body>
