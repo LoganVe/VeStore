@@ -13,6 +13,7 @@
 
     h1 {
       text-align: center;
+      margin-bottom: 20px;
     }
 
     #app {
@@ -30,7 +31,7 @@
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
-      transition: 0.2s;
+      transition: transform 0.15s ease;
     }
 
     .card:hover {
@@ -60,63 +61,86 @@
       height: 35px;
       border-radius: 50%;
     }
+
+    .loading {
+      text-align: center;
+      color: #555;
+    }
   </style>
 </head>
 
 <body>
 
 <h1>VeArchive</h1>
-<div id="app">Loading...</div>
+<div id="app" class="loading">Loading listings...</div>
 
 <script>
-fetch('data.json')
-  .then(res => {
-    if (!res.ok) throw new Error("data.json not found");
-    return res.json();
-  })
-  .then(data => {
+  async function loadListings() {
     const app = document.getElementById("app");
-    app.innerHTML = "";
 
-    data.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card";
+    try {
+      // ✅ GitHub Pages safe fetch
+      const res = await fetch('data.json');
 
-      card.innerHTML = `
-        <h3>${item.city}</h3>
-        <img src="${item.pictureUrl}" />
+      if (!res.ok) {
+        throw new Error("data.json not found");
+      }
 
-        <div class="seller">
-          <img class="avatar" src="${item.seller?.avatarUrl || ''}" />
-          <div>
-            <strong>${item.seller?.name || 'Unknown'}</strong><br/>
-            <small>${item.seller?.reviewsLabel || ''}</small>
+      const data = await res.json();
+
+      app.innerHTML = "";
+
+      data.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <h3>${item.city || 'Unknown City'}</h3>
+
+          <img src="${item.pictureUrl}" />
+
+          <div class="seller">
+            <img class="avatar" src="${item.seller?.avatarUrl || ''}" />
+            <div>
+              <strong>${item.seller?.name || 'Unknown'}</strong><br/>
+              <small>${item.seller?.reviewsLabel || ''}</small>
+            </div>
           </div>
-        </div>
 
-        <button onclick="contact(event, '${item.seller?.refId || ''}')">
-          Contact Seller
-        </button>
-      `;
+          <button onclick="contact(event, '${item.seller?.refId || ''}')">
+            Contact Seller
+          </button>
+        `;
 
-      // click card → open item page
-      card.addEventListener("click", (e) => {
-        if (e.target.tagName === "BUTTON") return;
-        window.location.href = `item.html?id=${item.id}`;
+        // ✅ click card → open item page
+        card.addEventListener("click", (e) => {
+          if (e.target.tagName === "BUTTON") return;
+          window.location.href = `item.html?id=${item.id}`;
+        });
+
+        app.appendChild(card);
       });
 
-      app.appendChild(card);
-    });
-  })
-  .catch(err => {
-    document.getElementById("app").innerHTML = "Failed to load data.json";
-    console.error(err);
-  });
+    } catch (err) {
+      console.error(err);
+      app.innerHTML = `
+        <div style="color:red;text-align:center;">
+          ❌ Failed to load data.json<br><br>
+          Fix checklist:<br>
+          • data.json is in repo root<br>
+          • GitHub Pages is deployed<br>
+          • open /VeStore/data.json in browser
+        </div>
+      `;
+    }
+  }
 
-function contact(e, refId) {
-  e.stopPropagation();
-  alert("Contact seller ID: " + refId);
-}
+  function contact(e, refId) {
+    e.stopPropagation();
+    alert("Contact seller ID: " + refId);
+  }
+
+  loadListings();
 </script>
 
 </body>
