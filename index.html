@@ -60,7 +60,7 @@
 <div id="app"></div>
 
 <script>
-fetch("./data.json")
+fetch("data.json")
   .then(res => {
     console.log("STATUS:", res.status);
     if (!res.ok) throw new Error("data.json not found");
