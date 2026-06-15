@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Archive Store</title>
+</head>
+<body>
+<h1>Archive Store</h1>
+<div id="app"></div>
+
+<script>
+fetch('./data.json')
+  .then(r => r.json())
+  .then(data => {
+    const app = document.getElementById("app");
+
+    data.forEach(item => {
+      const div = document.createElement("div");
+
+      div.innerHTML = `
+        <h3>${item.city}</h3>
+        <img src="${item.pictureUrl}" width="200"/>
+        <p>Seller: ${item.seller?.name}</p>
+        <button onclick="alert('Contact: ' + '${item.seller?.refId}')">
+          Contact seller
+        </button>
+        <hr/>
+      `;
+
+      app.appendChild(div);
+    });
+  });
+</script>
+
+</body>
+</html>
