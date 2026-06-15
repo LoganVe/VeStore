@@ -56,6 +56,17 @@
 <div id="app"></div>
 
 <script>
+  fetch('./data.json')
+  .then(r => {
+    if (!r.ok) throw new Error("data.json not found");
+    return r.json();
+  })
+  .then(data => {
+    console.log("Loaded:", data);
+  })
+  .catch(err => {
+    console.error("ERROR:", err);
+  });
 fetch('data.json')
   .then(res => res.json())
   .then(data => {
