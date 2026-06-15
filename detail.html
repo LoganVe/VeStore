@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Item</title>
+</head>
+<body>
+  <h1>Item Detail Page</h1>
+  <div id="out"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+fetch("./data.json")
+  .then(r => r.json())
+  .then(data => {
+    const item = data.find(x => x.id === id);
+
+    if (!item) {
+      document.getElementById("out").innerHTML = "Item not found";
+      return;
+    }
+
+    document.getElementById("out").innerHTML = `
+      <h2>${item.title}</h2>
+      <img src="${item.pictureUrl}" style="max-width:400px"/>
+      <p>City: ${item.city}</p>
+      <p>Seller: ${item.seller?.name}</p>
+    `;
+  });
+</script>
+</body>
+</html>
