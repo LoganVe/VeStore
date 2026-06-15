@@ -6,7 +6,7 @@
 
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: Arial;
       margin: 20px;
       background: #f7f7f7;
     }
@@ -23,10 +23,6 @@
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
-    }
-
-    .card:hover {
-      transform: scale(1.01);
     }
 
     img {
@@ -48,8 +44,8 @@
     }
 
     .error {
-      color: red;
       text-align: center;
+      color: red;
     }
   </style>
 </head>
@@ -60,49 +56,59 @@
 <div id="app"></div>
 
 <script>
+const app = document.getElementById("app");
+
+// FIXED: only ONE fetch, with proper error handling
 fetch("./data.json")
   .then(res => {
-    console.log("STATUS:", res.status, res.url);
-
     if (!res.ok) {
-      throw new Error("Cannot load data.json from " + res.url);
+      throw new Error("HTTP error " + res.status);
     }
-
     return res.json();
   })
   .then(data => {
-    const app = document.getElementById("app");
-    app.innerHTML = "";
-
-    data.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card";
-
-      card.innerHTML = `
-        <h3>${item.title}</h3>
-        <p><b>${item.city}</b> • ${item.price} ${item.currency}</p>
-        <img src="${item.pictureUrl}" />
-
-        <div class="seller">
-          <img class="avatar" src="${item.seller.avatarUrl}" />
-          <div>
-            <strong>${item.seller.name}</strong><br/>
-            <small>${item.seller.reviewsLabel}</small>
-          </div>
-        </div>
-      `;
-
-      card.onclick = () => window.location.href = item.url;
-
-      app.appendChild(card);
-    });
+    render(data);
   })
   .catch(err => {
-    console.error("FULL ERROR:", err);
-
-    document.getElementById("app").innerHTML =
-      "❌ Failed to load data.json";
+    console.error(err);
+    app.innerHTML = `
+      <div class="error">
+        ❌ Failed to load data.json<br><br>
+        Check:
+        <br>• file is in same folder as index.html
+        <br>• GitHub Pages is updated
+        <br>• data.json opens directly in browser
+      </div>
+    `;
   });
+
+function render(data) {
+  app.innerHTML = "";
+
+  data.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.onclick = () => {
+      window.location.href = `detail.html?id=${item.id}`;
+    };
+
+    card.innerHTML = `
+      <h3>${item.city || ""}</h3>
+      <img src="${item.pictureUrl}" />
+
+      <div class="seller">
+        <img class="avatar" src="${item.seller?.avatarUrl || ''}" />
+        <div>
+          <strong>${item.seller?.name || ""}</strong><br/>
+          <small>${item.seller?.reviewsLabel || ""}</small>
+        </div>
+      </div>
+    `;
+
+    app.appendChild(card);
+  });
+}
 </script>
 
 </body>
