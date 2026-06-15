@@ -1,114 +1,125 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>VeArchive</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CCP Archive Listings</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f7f7f7;
-    }
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #0f0f0f;
+    color: white;
+    margin: 0;
+    padding: 20px;
+  }
 
-    h1 {
-      text-align: center;
-    }
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
 
-    .card {
-      background: white;
-      padding: 15px;
-      margin: 15px auto;
-      max-width: 500px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      cursor: pointer;
-    }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
 
-    .card:hover {
-      transform: scale(1.01);
-      transition: 0.2s;
-    }
+  .card {
+    background: #1b1b1b;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: 0.2s ease;
+  }
 
-    img {
-      max-width: 100%;
-      border-radius: 8px;
-    }
+  .card:hover {
+    transform: scale(1.02);
+  }
 
-    .seller {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
-    }
+  .card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    background: #000;
+  }
 
-    .avatar {
-      width: 35px;
-      height: 35px;
-      border-radius: 50%;
-    }
+  .content {
+    padding: 12px;
+  }
 
-    .error {
-      color: red;
-      text-align: center;
-    }
-  </style>
+  .title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .price {
+    color: #00ff99;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+
+  .meta {
+    font-size: 11px;
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+
+  a {
+    display: inline-block;
+    padding: 6px 10px;
+    background: #2a2a2a;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
+  a:hover {
+    background: #444;
+  }
+</style>
 </head>
 
 <body>
 
-<h1>VeArchive</h1>
-<div id="app"></div>
+<h1>Goofish CCP Archive</h1>
+<div class="grid" id="listings"></div>
 
 <script>
-const DATA_URL = "./data.json"; 
-// IMPORTANT: works if data.json is in same folder as index.html in VeStore
 
-fetch(DATA_URL)
-  .then(res => {
-    if (!res.ok) throw new Error("HTTP error " + res.status);
-    return res.json();
-  })
-  .then(data => {
-    const app = document.getElementById("app");
-    app.innerHTML = "";
+// 🔥 PASTE YOUR JSON DATA HERE
+const data = [
+  // (your big JSON array goes here)
+];
 
-    data.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card";
+const container = document.getElementById("listings");
 
-      // FIX IMAGE (force https fallback)
-      const imgUrl = item.pictureUrl?.replace("http://", "https://");
+data.forEach(item => {
+  const card = document.createElement("div");
+  card.className = "card";
 
-      card.innerHTML = `
-        <h3>${item.title || "No title"}</h3>
-        <p><strong>${item.city || ""}</strong></p>
+  // safe image system (auto fixes HEIC / broken links)
+  const imgUrl = `https://images.weserv.nl/?url=${encodeURIComponent(item.pictureUrl)}`;
 
-        <img src="${imgUrl}" onerror="this.style.display='none'" />
+  card.innerHTML = `
+    <img src="${imgUrl}"
+         onerror="this.onerror=null;this.src='https://via.placeholder.com/400x300?text=No+Image';"
+         alt="product image">
 
-        <div class="seller">
-          <img class="avatar" src="${item.seller?.avatarUrl}" />
-          <div>
-            <strong>${item.seller?.name || ""}</strong><br/>
-            <small>${item.seller?.reviewsLabel || ""}</small>
-          </div>
-        </div>
-      `;
+    <div class="content">
+      <div class="title">${item.title}</div>
+      <div class="price">¥${item.price}</div>
+      <div class="meta">${item.city || ''} • ${item.postedAt ? item.postedAt.slice(0,10) : ''}</div>
+      <a href="${item.url}" target="_blank">View Listing</a>
+    </div>
+  `;
 
-      // CLICK = open detail page
-      card.onclick = () => {
-        localStorage.setItem("selectedItem", JSON.stringify(item));
-        window.location.href = "item.html";
-      };
-
-      app.appendChild(card);
-    });
-  })
-  .catch(err => {
-    document.getElementById("app").innerHTML =
-      `<div class="error">❌ Failed to load data.json</div>`;
-    console.error(err);
-  });
+  container.appendChild(card);
+});
 </script>
 
 </body>
