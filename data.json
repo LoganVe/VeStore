@@ -1,19 +1,4 @@
-data.forEach(item => {
-  const card = document.createElement("div");
 
-  card.innerHTML = `
-    <img src="${item.pictureUrl}">
-    <h3>${item.title}</h3>
-    <p>${item.price}</p>
-  `;
-
-  card.onclick = () => {
-    window.location.href = `item.html?id=${item.id}`;
-  };
-
-  document.body.appendChild(card);
-});
-[
   {
     "id": "1058352910945",
     "url": "https://www.goofish.com/item?id=1058352910945",
