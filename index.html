@@ -154,67 +154,46 @@ h1{
 const listingsContainer = document.getElementById("listings");
 let allListings = [];
 
-/* ---------- IMAGE FIX ---------- */
-function cleanUrl(url){
+/* ---------------- IMAGE ENGINE ---------------- */
+
+function buildImageChain(url){
     if(!url) return "";
 
-    return url
+    const clean = url
         .replace("http://", "https://")
-        .replace(".heic", ".jpg")
-        .trim();
+        .replace(".heic", ".jpg");
+
+    // 1. primary proxy (reliable)
+    const wsrv = "https://wsrv.nl/?url=" + encodeURIComponent(clean) + "&output=jpg";
+
+    // 2. fallback proxy (backup)
+    const imagesw = "https://images.weserv.nl/?url=" + encodeURIComponent(clean);
+
+    // return chain (we try wsrv first, then fallback in onerror)
+    return { clean, wsrv, imagesw };
 }
 
-function proxy(url){
-    return "https://wsrv.nl/?url=" + encodeURIComponent(url) + "&output=jpg";
-}
+/* ---------------- DATA LOAD ---------------- */
 
-/* ---------- SKELETON UI ---------- */
-function showSkeletons(){
-    listingsContainer.innerHTML = "";
-    const grid = document.createElement("div");
-    grid.className = "grid";
-
-    for(let i=0;i<12;i++){
-        const sk = document.createElement("div");
-        sk.className = "card";
-
-        sk.innerHTML = `
-            <div class="skeleton skel-img"></div>
-            <div class="skeleton skel-line" style="width:60%"></div>
-            <div class="skeleton skel-line" style="width:40%"></div>
-        `;
-
-        grid.appendChild(sk);
-    }
-
-    listingsContainer.appendChild(grid);
-}
-
-/* ---------- LOAD DATA ---------- */
 async function loadData(){
-
-    showSkeletons();
-
     try{
-
         const res = await fetch("data.json");
-        if(!res.ok) throw new Error("data.json not found");
+        if(!res.ok) throw new Error("data.json missing");
 
         const json = await res.json();
 
-        allListings = Array.isArray(json)
-            ? json
-            : (json.items || []);
+        allListings = Array.isArray(json) ? json : (json.items || []);
 
         render(allListings);
 
     } catch(err){
         console.error(err);
-        listingsContainer.innerHTML = `<div class="error">Failed to load data.json</div>`;
+        listingsContainer.innerHTML = "<div style='color:red;text-align:center'>Failed to load</div>";
     }
 }
 
-/* ---------- RENDER ---------- */
+/* ---------------- RENDER ---------------- */
+
 function render(data){
 
     const grid = document.createElement("div");
@@ -222,8 +201,7 @@ function render(data){
 
     data.forEach(item => {
 
-        const raw = item.pictureUrl || item.image || "";
-        const url = cleanUrl(raw);
+        const imgData = buildImageChain(item.pictureUrl || item.image);
 
         const card = document.createElement("div");
         card.className = "card";
@@ -231,27 +209,20 @@ function render(data){
         const img = document.createElement("img");
         img.loading = "lazy";
         img.alt = item.title || "";
-        img.src = url;
 
-        img.onload = () => {
-            img.classList.add("fade-in");
-        };
+        // start with proxy 1
+        img.src = imgData.wsrv;
 
+        // STEP 1 failure → try second proxy
         img.onerror = () => {
 
-            const fallback = proxy(url);
+            if(img.src === imgData.wsrv){
+                img.src = imgData.imagesw;
+                return;
+            }
 
-            const test = new Image();
-
-            test.onload = () => {
-                img.src = fallback;
-            };
-
-            test.onerror = () => {
-                img.src = "https://via.placeholder.com/400x300?text=No+Image";
-            };
-
-            test.src = fallback;
+            // STEP 2 failure → final fallback
+            img.src = "https://via.placeholder.com/400x300?text=No+Image";
         };
 
         const content = document.createElement("div");
@@ -273,7 +244,8 @@ function render(data){
     listingsContainer.appendChild(grid);
 }
 
-/* ---------- SEARCH ---------- */
+/* ---------------- SEARCH ---------------- */
+
 document.getElementById("search").addEventListener("input", e => {
 
     const term = e.target.value.toLowerCase();
