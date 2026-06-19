@@ -120,23 +120,30 @@ const search = document.getElementById("search");
 const city = document.getElementById("city");
 const sort = document.getElementById("sort");
 
-/* FIXED IMAGE HANDLER */
-function fixImage(url){
+/* =========================
+   🔥 FIXED IMAGE SYSTEM
+========================= */
 
-    if(!url) return "";
+function getImage(url){
 
-    // force https
-    let fixed = url.replace("http://", "https://");
+    if(!url) return fallback();
 
-    // block broken formats (common GitHub issue)
-    if(fixed.includes(".heic")){
-        return "https://via.placeholder.com/600x800?text=No+Preview";
-    }
+    // kill broken formats
+    if(url.includes(".heic")) return fallback();
 
-    return fixed;
+    // strip http issues
+    let clean = url.replace("http://", "https://");
+
+    // PROXY (THIS FIXES YOUR ISSUE)
+    return "https://images.weserv.nl/?url=" + encodeURIComponent(clean);
 }
 
-/* RENDER */
+function fallback(){
+    return "https://via.placeholder.com/600x800?text=No+Image";
+}
+
+/* ========================= */
+
 function render(data){
 
     stats.textContent = `${data.length} listings`;
@@ -154,11 +161,13 @@ function render(data){
         const card = document.createElement("div");
         card.className = "card";
 
+        const imgSrc = getImage(item.pictureUrl);
+
         card.innerHTML = `
             <img 
-                src="${fixImage(item.pictureUrl)}"
+                src="${imgSrc}"
                 loading="lazy"
-                onerror="this.onerror=null;this.src='https://via.placeholder.com/600x800?text=No+Image';"
+                onerror="this.src='https://via.placeholder.com/600x800?text=No+Image'"
             >
 
             <div class="content">
@@ -194,32 +203,32 @@ function update(){
     }
 
     if(sort.value === "low"){
-        filtered.sort((a,b) => (a.price||0)-(b.price||0));
+        filtered.sort((a,b)=>a.price-b.price);
     }
 
     if(sort.value === "high"){
-        filtered.sort((a,b) => (b.price||0)-(a.price||0));
+        filtered.sort((a,b)=>b.price-a.price);
     }
 
     render(filtered);
 }
 
-/* CITY DROPDOWN */
+/* CITY LIST */
 function loadCities(){
 
     const cities = [...new Set(items.map(i => i.city).filter(Boolean))];
 
     city.innerHTML = `<option value="">All Cities</option>`;
 
-    cities.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
+    cities.forEach(c=>{
+        const opt=document.createElement("option");
+        opt.value=c;
+        opt.textContent=c;
         city.appendChild(opt);
     });
 }
 
-/* LOAD JSON (GITHUB SAFE) */
+/* LOAD DATA */
 async function load(){
 
     try{
@@ -227,10 +236,6 @@ async function load(){
         const res = await fetch("./data.json", {
             cache: "no-store"
         });
-
-        if(!res.ok){
-            throw new Error("HTTP " + res.status);
-        }
 
         const json = await res.json();
 
@@ -241,12 +246,11 @@ async function load(){
 
     } catch(err){
 
-        console.error("DATA LOAD ERROR:", err);
+        console.error(err);
 
         listings.innerHTML = `
             <div class="loading">
-                Failed to load data.json<br>
-                Check file path or GitHub Pages deploy
+                Failed to load data.json
             </div>
         `;
     }
