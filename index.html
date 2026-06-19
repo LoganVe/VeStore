@@ -187,23 +187,25 @@ function renderListings(data){
         card.innerHTML = `
             <img
   class="product-image"
-  src="${image}"
+  src="${(item.pictureUrl || '')
+    .replace('http://', 'https://')
+    .replace('.heic', '.jpg')}"
   loading="lazy"
   referrerpolicy="no-referrer"
   alt="${item.title}"
- onerror="
-  this.onerror = null;
+  onerror="
+    this.onerror=null;
 
-  const fallback = 'https://wsrv.nl/?url=' + encodeURIComponent(this.src) + '&output=jpg';
+    const fallback = 'https://wsrv.nl/?url=' + encodeURIComponent(this.src) + '&output=jpg';
 
-  const img = new Image();
+    const testImg = new Image();
 
-  img.onload = () => { this.src = fallback; };
+    testImg.onload = () => { this.src = fallback; };
 
-  img.onerror = () => { this.style.display = 'none'; };
+    testImg.onerror = () => { this.src = 'https://via.placeholder.com/400x300?text=No+Image'; };
 
-  img.src = fallback;
-"
+    testImg.src = fallback;
+  "
 >
             <div class="content">
 
