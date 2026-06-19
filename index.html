@@ -187,14 +187,13 @@ function renderListings(data){
         card.innerHTML = `
             <img
   class="product-image"
-  src="${item.pictureUrl.replace('http://','https://')}"
+  src="${image}"
   loading="lazy"
   referrerpolicy="no-referrer"
   alt="${item.title}"
   onerror="
     this.onerror=null;
-    this.src='https://images.weserv.nl/?url=' +
-      encodeURIComponent(this.src.replace('https://',''));
+    this.src='https://wsrv.nl/?url=' + encodeURIComponent(this.src) + '&output=jpg';
   "
 >
             <div class="content">
