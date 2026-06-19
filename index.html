@@ -186,12 +186,17 @@ function renderListings(data){
 
         card.innerHTML = `
             <img
-                src="${image}"
-                loading="lazy"
-                referrerpolicy="no-referrer"
-                onerror="this.src='https://placehold.co/600x800?text=No+Image'"
-            >
-
+  class="product-image"
+  src="${item.pictureUrl.replace('http://','https://')}"
+  loading="lazy"
+  referrerpolicy="no-referrer"
+  alt="${item.title}"
+  onerror="
+    this.onerror=null;
+    this.src='https://images.weserv.nl/?url=' +
+      encodeURIComponent(this.src.replace('https://',''));
+  "
+>
             <div class="content">
 
                 <div class="price">
