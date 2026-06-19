@@ -2,168 +2,391 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VeArchive</title>
 
 <style>
-body{
+
+:root{
+    --bg:#080808;
+    --card:#111;
+    --border:#222;
+    --text:#f5f5f5;
+    --muted:#888;
+    --accent:#ffffff;
+}
+
+*{
     margin:0;
-    padding:30px;
-    background:#0b0b0b;
-    color:white;
-    font-family:Arial,sans-serif;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter,Arial,sans-serif;
+}
+
+header{
+    padding:40px 25px;
+    border-bottom:1px solid var(--border);
 }
 
 h1{
-    text-align:center;
-    margin-bottom:25px;
+    font-size:40px;
+    font-weight:700;
+    letter-spacing:-1px;
+}
+
+.subtitle{
+    color:var(--muted);
+    margin-top:6px;
+}
+
+.controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:25px;
+}
+
+input,
+select{
+    background:#111;
+    border:1px solid #222;
+    color:white;
+    padding:12px;
+    border-radius:10px;
 }
 
 #search{
-    width:100%;
-    max-width:700px;
-    display:block;
-    margin:0 auto 25px;
-    padding:12px;
-    border-radius:10px;
-    border:1px solid #333;
-    background:#151515;
-    color:white;
+    flex:1;
+    min-width:280px;
+}
+
+.stats{
+    margin-top:15px;
+    color:var(--muted);
+}
+
+main{
+    padding:25px;
 }
 
 .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
     gap:20px;
 }
 
 .card{
-    background:#151515;
-    border-radius:12px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
     overflow:hidden;
+    transition:.2s;
+}
+
+.card:hover{
+    transform:translateY(-3px);
 }
 
 .card img{
     width:100%;
-    height:320px;
+    height:350px;
     object-fit:cover;
-    background:#111;
-    display:block;
+    background:#000;
 }
 
-.content{ padding:12px; }
+.content{
+    padding:16px;
+}
 
 .price{
-    color:#00ff99;
-    font-size:18px;
-    font-weight:bold;
+    font-size:22px;
+    font-weight:700;
 }
 
 .title{
-    margin-top:8px;
+    margin-top:10px;
+    line-height:1.4;
     font-size:14px;
 }
 
-.meta{
-    color:#888;
-    font-size:12px;
-    margin-top:6px;
+.city{
+    margin-top:12px;
+    color:var(--muted);
+}
+
+.actions{
+    margin-top:15px;
 }
 
 .button{
     display:block;
     text-align:center;
-    margin-top:12px;
-    padding:10px;
     background:white;
     color:black;
     text-decoration:none;
-    border-radius:8px;
+    padding:12px;
+    border-radius:10px;
+    font-weight:600;
 }
+
+.loading{
+    text-align:center;
+    padding:100px;
+    color:var(--muted);
+}
+
 </style>
 </head>
 
 <body>
 
+<header>
+
 <h1>VeArchive</h1>
 
-<input id="search" placeholder="Search listings...">
+<div class="subtitle">
+Fashion Archive Marketplace
+</div>
 
-<div id="listings">Loading...</div>
+<div class="controls">
+
+<input
+id="search"
+placeholder="Search..."
+>
+
+<select id="cityFilter">
+<option value="">All Cities</option>
+</select>
+
+<select id="sort">
+<option value="">Sort</option>
+<option value="low">Price ↑</option>
+<option value="high">Price ↓</option>
+</select>
+
+</div>
+
+<div class="stats" id="stats">
+Loading...
+</div>
+
+</header>
+
+<main>
+
+<div id="listings" class="loading">
+Loading archive...
+</div>
+
+</main>
 
 <script>
 
-const container = document.getElementById("listings");
+let allItems=[];
 
-let all = [];
+const listings=document.getElementById("listings");
+const stats=document.getElementById("stats");
+const search=document.getElementById("search");
+const cityFilter=document.getElementById("cityFilter");
+const sort=document.getElementById("sort");
 
-/* CLEAN IMAGE HANDLER */
-function getImage(url){
+function image(url){
+
     if(!url) return "";
 
-    // force https only
-    return url.replace("http://", "https://");
+    return url.replace("http://","https://");
+
 }
 
-function render(data){
+function populateCities(){
 
-    container.innerHTML = `<div class="grid"></div>`;
-    const grid = container.querySelector(".grid");
+    const cities=[
+        ...new Set(
+            allItems
+            .map(x=>x.city)
+            .filter(Boolean)
+        )
+    ].sort();
 
-    data.forEach(item => {
+    cities.forEach(city=>{
 
-        const img = getImage(item.pictureUrl);
+        const option=document.createElement("option");
 
-        const card = document.createElement("div");
-        card.className = "card";
+        option.value=city;
+        option.textContent=city;
 
-        card.innerHTML = `
+        cityFilter.appendChild(option);
+
+    });
+
+}
+
+function render(items){
+
+    stats.textContent=
+        `${items.length} listings`;
+
+    if(!items.length){
+
+        listings.innerHTML=
+        `<div class="loading">
+        No results found.
+        </div>`;
+
+        return;
+
+    }
+
+    listings.innerHTML=
+        `<div class="grid"></div>`;
+
+    const grid=listings.querySelector(".grid");
+
+    items.forEach(item=>{
+
+        const card=document.createElement("div");
+
+        card.className="card";
+
+        card.innerHTML=`
+
             <img
-                src="${img}"
-                loading="lazy"
-                alt=""
-                onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300?text=No+Image';"
+            src="${image(item.pictureUrl)}"
+            loading="lazy"
+            onerror="this.src='https://via.placeholder.com/600x800?text=No+Image'"
             >
 
             <div class="content">
-                <div class="price">¥${item.price || 0}</div>
-                <div class="title">${item.title || "Untitled"}</div>
-                <div class="meta">${item.city || ""}</div>
 
-                <a class="button" href="${item.url}" target="_blank">
+                <div class="price">
+                    ¥${Number(item.price||0).toLocaleString()}
+                </div>
+
+                <div class="title">
+                    ${item.title || "Untitled"}
+                </div>
+
+                <div class="city">
+                    ${item.city || ""}
+                </div>
+
+                <div class="actions">
+
+                    <a
+                    class="button"
+                    href="${item.url}"
+                    target="_blank">
                     View Listing
-                </a>
+                    </a>
+
+                </div>
+
             </div>
         `;
 
         grid.appendChild(card);
+
     });
+
+}
+
+function update(){
+
+    let items=[...allItems];
+
+    const q=
+        search.value
+        .toLowerCase()
+        .trim();
+
+    if(q){
+
+        items=items.filter(item=>
+
+            (item.title || "")
+            .toLowerCase()
+            .includes(q)
+
+        );
+
+    }
+
+    if(cityFilter.value){
+
+        items=items.filter(item=>
+
+            item.city===cityFilter.value
+
+        );
+
+    }
+
+    if(sort.value==="low"){
+
+        items.sort(
+            (a,b)=>
+            (a.price||0)-
+            (b.price||0)
+        );
+
+    }
+
+    if(sort.value==="high"){
+
+        items.sort(
+            (a,b)=>
+            (b.price||0)-
+            (a.price||0)
+        );
+
+    }
+
+    render(items);
+
 }
 
 async function load(){
+
     try{
-        const res = await fetch("./data.json");
-        const json = await res.json();
 
-        all = json.items || json;
-        render(all);
+        const response=
+            await fetch("data.json");
 
-    } catch(e){
-        console.log(e);
-        container.innerHTML = "Failed to load data.json";
+        const data=
+            await response.json();
+
+        allItems=
+            Array.isArray(data)
+            ? data
+            : data.items || [];
+
+        populateCities();
+
+        update();
+
     }
+    catch(error){
+
+        console.error(error);
+
+        listings.innerHTML=
+        `<div class="loading">
+        Failed to load data.json
+        </div>`;
+
+    }
+
 }
 
-/* search without re-breaking DOM too hard */
-document.getElementById("search").addEventListener("input", (e) => {
-    const t = e.target.value.toLowerCase();
-
-    const filtered = all.filter(x =>
-        (x.title || "").toLowerCase().includes(t)
-    );
-
-    render(filtered);
-});
+search.addEventListener("input",update);
+cityFilter.addEventListener("change",update);
+sort.addEventListener("change",update);
 
 load();
 
