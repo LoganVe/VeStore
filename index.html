@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VeArchive</title>
 
 <style>
@@ -14,7 +14,11 @@
     --muted:#888;
 }
 
-*{margin:0;padding:0;box-sizing:border-box;}
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
 body{
     background:var(--bg);
@@ -27,74 +31,91 @@ header{
     border-bottom:1px solid var(--border);
 }
 
-h1{font-size:40px;}
+h1{ font-size:40px; }
 
-.subtitle{color:var(--muted);margin-top:6px;}
+.subtitle{
+    color:var(--muted);
+    margin-top:6px;
+}
 
 .controls{
     display:flex;
     flex-wrap:wrap;
     gap:10px;
-    margin-top:25px;
+    margin-top:20px;
 }
 
-input,select{
+input, select{
     background:#111;
     border:1px solid #222;
     color:white;
-    padding:12px;
-    border-radius:10px;
+    padding:10px;
+    border-radius:8px;
 }
 
-#search{flex:1;min-width:280px;}
+#search{ flex:1; min-width:200px; }
 
-.stats{margin-top:15px;color:var(--muted);}
+.stats{
+    margin-top:10px;
+    color:var(--muted);
+}
 
-main{padding:25px;}
+main{ padding:25px; }
 
 .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
     gap:20px;
 }
 
 .card{
     background:var(--card);
     border:1px solid var(--border);
-    border-radius:16px;
+    border-radius:12px;
     overflow:hidden;
 }
 
 .card img{
     width:100%;
-    height:350px;
+    height:320px;
     object-fit:cover;
-    background:#000;
 }
 
-.content{padding:16px;}
+.content{
+    padding:12px;
+}
 
-.price{font-size:22px;font-weight:700;}
+.price{
+    font-size:18px;
+    font-weight:bold;
+}
 
-.title{margin-top:10px;font-size:14px;}
+.title{
+    margin-top:6px;
+    font-size:14px;
+    line-height:1.4;
+}
 
-.city{margin-top:12px;color:var(--muted);}
+.city{
+    margin-top:8px;
+    color:var(--muted);
+}
 
 .button{
     display:block;
-    margin-top:15px;
+    margin-top:10px;
+    padding:10px;
     text-align:center;
     background:white;
     color:black;
-    padding:12px;
-    border-radius:10px;
     text-decoration:none;
+    border-radius:8px;
     font-weight:600;
 }
 
 .loading{
     text-align:center;
-    padding:100px;
+    padding:80px;
     color:var(--muted);
 }
 </style>
@@ -103,28 +124,29 @@ main{padding:25px;}
 <body>
 
 <header>
-<h1>VeArchive</h1>
-<div class="subtitle">Fashion Archive Marketplace</div>
+    <h1>VeArchive</h1>
+    <div class="subtitle">Fashion Archive Marketplace</div>
 
-<div class="controls">
-<input id="search" placeholder="Search...">
-<select id="cityFilter"><option value="">All Cities</option></select>
-<select id="sort">
-<option value="">Sort</option>
-<option value="low">Price ↑</option>
-<option value="high">Price ↓</option>
-</select>
-</div>
+    <div class="controls">
+        <input id="search" placeholder="Search..." />
+        <select id="cityFilter">
+            <option value="">All Cities</option>
+        </select>
+        <select id="sort">
+            <option value="">Sort</option>
+            <option value="low">Price ↑</option>
+            <option value="high">Price ↓</option>
+        </select>
+    </div>
 
-<div class="stats" id="stats">Loading...</div>
+    <div class="stats" id="stats">Loading...</div>
 </header>
 
 <main>
-<div id="listings" class="loading">Loading archive...</div>
+    <div id="listings" class="loading">Loading archive...</div>
 </main>
 
 <script>
-
 let allItems = [];
 
 const listings = document.getElementById("listings");
@@ -133,38 +155,15 @@ const search = document.getElementById("search");
 const cityFilter = document.getElementById("cityFilter");
 const sort = document.getElementById("sort");
 
-/* =========================
-   SIMPLE + RELIABLE PATH
-========================= */
-function getDataUrl() {
-    // This works on GitHub Pages ALWAYS if data.json is in root
-    const isGitHub = location.hostname.includes("github.io");
-
-    if (isGitHub) {
-        // safest assumption: same folder as index.html
-        return "./data.json";
-    }
-
-    return "./data.json";
-}
-
-/* =========================
-   IMAGE FIX
-========================= */
-function image(url){
+function fixImage(url){
     if(!url) return "";
-    return url.replace("http://","https://");
+    return url.replace("http://", "https://");
 }
 
-/* =========================
-   CITY FILTER
-========================= */
 function populateCities(){
-    const cities = [...new Set(allItems.map(x => x.city).filter(Boolean))].sort();
+    const cities = [...new Set(allItems.map(i => i.city).filter(Boolean))].sort();
 
-    cityFilter.innerHTML = `<option value="">All Cities</option>`;
-
-    cities.forEach(city=>{
+    cities.forEach(city => {
         const opt = document.createElement("option");
         opt.value = city;
         opt.textContent = city;
@@ -172,36 +171,33 @@ function populateCities(){
     });
 }
 
-/* =========================
-   RENDER
-========================= */
 function render(items){
 
     stats.textContent = `${items.length} listings`;
 
-    if(!items.length){
-        listings.innerHTML = `<div class="loading">No results found.</div>`;
+    if(items.length === 0){
+        listings.innerHTML = `<div class="loading">No results found</div>`;
         return;
     }
 
-    listings.innerHTML = `<div class="grid"></div>`;
-    const grid = listings.querySelector(".grid");
+    const grid = document.createElement("div");
+    grid.className = "grid";
 
-    items.forEach(item=>{
+    items.forEach(item => {
+
         const card = document.createElement("div");
         card.className = "card";
 
         card.innerHTML = `
-            <img src="${image(item.pictureUrl)}"
-                 loading="lazy"
-                 onerror="this.src='https://via.placeholder.com/600x800?text=No+Image'">
+            <img src="${fixImage(item.pictureUrl)}"
+                 onerror="this.src='https://via.placeholder.com/400x500?text=No+Image'">
 
             <div class="content">
                 <div class="price">¥${Number(item.price || 0).toLocaleString()}</div>
                 <div class="title">${item.title || "Untitled"}</div>
                 <div class="city">${item.city || ""}</div>
 
-                <a class="button" href="${item.url || '#'}" target="_blank">
+                <a class="button" href="${item.url}" target="_blank">
                     View Listing
                 </a>
             </div>
@@ -209,11 +205,11 @@ function render(items){
 
         grid.appendChild(card);
     });
+
+    listings.innerHTML = "";
+    listings.appendChild(grid);
 }
 
-/* =========================
-   FILTERS
-========================= */
 function update(){
 
     let items = [...allItems];
@@ -231,28 +227,22 @@ function update(){
     }
 
     if(sort.value === "low"){
-        items.sort((a,b)=>(a.price||0)-(b.price||0));
+        items.sort((a,b) => (a.price||0)-(b.price||0));
     }
 
     if(sort.value === "high"){
-        items.sort((a,b)=>(b.price||0)-(a.price||0));
+        items.sort((a,b) => (b.price||0)-(a.price||0));
     }
 
     render(items);
 }
 
-/* =========================
-   LOAD DATA (DEBUG VERSION)
-========================= */
 async function load(){
 
     try{
+        console.log("Loading data.json...");
 
-        const url = getDataUrl();
-
-        console.log("Fetching:", url);
-
-        const res = await fetch(url);
+        const res = await fetch("./data.json?cache=" + Date.now());
 
         if(!res.ok){
             throw new Error("HTTP " + res.status);
@@ -260,7 +250,9 @@ async function load(){
 
         const data = await res.json();
 
-        allItems = Array.isArray(data) ? data : (data.items || []);
+        allItems = Array.isArray(data)
+            ? data
+            : (data.items || []);
 
         console.log("Loaded items:", allItems.length);
 
@@ -268,26 +260,22 @@ async function load(){
         update();
 
     }catch(err){
-
         console.error("LOAD FAILED:", err);
 
         listings.innerHTML = `
             <div class="loading">
-                Failed to load data.json<br><br>
-                ${err.message}<br><br>
+                Failed to load data.json<br>
                 Open DevTools (F12) → Console
             </div>
         `;
     }
 }
 
-/* EVENTS */
 search.addEventListener("input", update);
 cityFilter.addEventListener("change", update);
 sort.addEventListener("change", update);
 
 load();
-
 </script>
 
 </body>
