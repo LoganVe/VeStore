@@ -191,10 +191,19 @@ function renderListings(data){
   loading="lazy"
   referrerpolicy="no-referrer"
   alt="${item.title}"
-  onerror="
-    this.onerror=null;
-    this.src='https://wsrv.nl/?url=' + encodeURIComponent(this.src) + '&output=jpg';
-  "
+ onerror="
+  this.onerror = null;
+
+  const fallback = 'https://wsrv.nl/?url=' + encodeURIComponent(this.src) + '&output=jpg';
+
+  const img = new Image();
+
+  img.onload = () => { this.src = fallback; };
+
+  img.onerror = () => { this.style.display = 'none'; };
+
+  img.src = fallback;
+"
 >
             <div class="content">
 
