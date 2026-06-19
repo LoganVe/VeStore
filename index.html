@@ -120,29 +120,19 @@ const search = document.getElementById("search");
 const city = document.getElementById("city");
 const sort = document.getElementById("sort");
 
-/* =========================
-   🔥 FIXED IMAGE SYSTEM
-========================= */
+/* ================= IMAGE ENGINE ================= */
 
-function getImage(url){
-
+function safeImage(url){
     if(!url) return fallback();
-
-    // kill broken formats
     if(url.includes(".heic")) return fallback();
-
-    // strip http issues
-    let clean = url.replace("http://", "https://");
-
-    // PROXY (THIS FIXES YOUR ISSUE)
-    return "https://images.weserv.nl/?url=" + encodeURIComponent(clean);
+    return url.replace("http://","https://");
 }
 
 function fallback(){
     return "https://via.placeholder.com/600x800?text=No+Image";
 }
 
-/* ========================= */
+/* ================= RENDER ================= */
 
 function render(data){
 
@@ -154,26 +144,31 @@ function render(data){
     }
 
     listings.innerHTML = `<div class="grid"></div>`;
-    const grid = listings.querySelector(".grid");
+    const grid = document.querySelector(".grid");
 
     data.forEach(item => {
 
         const card = document.createElement("div");
         card.className = "card";
 
-        const imgSrc = getImage(item.pictureUrl);
-
         card.innerHTML = `
             <img 
-                src="${imgSrc}"
+                src="${safeImage(item.pictureUrl)}"
                 loading="lazy"
-                onerror="this.src='https://via.placeholder.com/600x800?text=No+Image'"
+                onerror="
+                    if(!this.dataset.retry){
+                        this.dataset.retry=1;
+                        this.src='https://images.weserv.nl/?url=' + encodeURIComponent('${safeImage(item.pictureUrl)}'.replace('https://',''));
+                    } else {
+                        this.src='https://via.placeholder.com/600x800?text=No+Image';
+                    }
+                "
             >
 
             <div class="content">
-                <div class="price">¥${(item.price || 0).toLocaleString()}</div>
-                <div>${item.title || "Untitled"}</div>
-                <div class="city">${item.city || ""}</div>
+                <div class="price">¥${(item.price||0).toLocaleString()}</div>
+                <div>${item.title || 'Untitled'}</div>
+                <div class="city">${item.city || ''}</div>
 
                 <a class="button" href="${item.url}" target="_blank">
                     View
@@ -185,7 +180,8 @@ function render(data){
     });
 }
 
-/* FILTERS */
+/* ================= FILTER ================= */
+
 function update(){
 
     let filtered = [...items];
@@ -194,7 +190,7 @@ function update(){
 
     if(q){
         filtered = filtered.filter(i =>
-            (i.title || "").toLowerCase().includes(q)
+            (i.title||'').toLowerCase().includes(q)
         );
     }
 
@@ -213,33 +209,35 @@ function update(){
     render(filtered);
 }
 
-/* CITY LIST */
+/* ================= CITIES ================= */
+
 function loadCities(){
 
-    const cities = [...new Set(items.map(i => i.city).filter(Boolean))];
+    const cities = [...new Set(items.map(i=>i.city).filter(Boolean))];
 
     city.innerHTML = `<option value="">All Cities</option>`;
 
     cities.forEach(c=>{
-        const opt=document.createElement("option");
-        opt.value=c;
-        opt.textContent=c;
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
         city.appendChild(opt);
     });
 }
 
-/* LOAD DATA */
+/* ================= LOAD JSON ================= */
+
 async function load(){
 
     try{
 
-        const res = await fetch("./data.json", {
-            cache: "no-store"
-        });
+        const res = await fetch("./data.json", {cache:"no-store"});
+
+        if(!res.ok) throw new Error(res.status);
 
         const json = await res.json();
 
-        items = json.items || json;
+        items = json.items || [];
 
         loadCities();
         update();
@@ -256,7 +254,8 @@ async function load(){
     }
 }
 
-/* EVENTS */
+/* ================= EVENTS ================= */
+
 search.addEventListener("input", update);
 city.addEventListener("change", update);
 sort.addEventListener("change", update);
