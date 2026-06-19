@@ -1,16 +1,15 @@
-Update deploy trigger
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>VeArchive</title>
 
 <style>
 body{
     margin:0;
     background:#0b0b0b;
-    color:#fff;
+    color:white;
     font-family:Arial,sans-serif;
 }
 
@@ -19,32 +18,28 @@ header{
     border-bottom:1px solid #222;
 }
 
-h1{margin:0;font-size:36px;}
+h1{margin:0;font-size:34px;}
 
 .controls{
-    margin-top:15px;
     display:flex;
     gap:10px;
+    margin-top:15px;
     flex-wrap:wrap;
 }
 
 input,select{
     padding:10px;
-    background:#111;
-    border:1px solid #222;
-    color:white;
     border-radius:8px;
+    border:1px solid #333;
+    background:#111;
+    color:white;
 }
-
-#search{flex:1;min-width:200px;}
-
-.stats{margin-top:10px;color:#888;}
 
 main{padding:20px;}
 
 .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
     gap:15px;
 }
 
@@ -60,31 +55,30 @@ main{padding:20px;}
     height:320px;
     object-fit:cover;
     background:#000;
-    display:block;
 }
 
 .content{padding:12px;}
 
 .price{font-size:18px;font-weight:bold;}
-
-.city{color:#888;font-size:13px;margin-top:5px;}
+.title{margin-top:8px;font-size:13px;line-height:1.4;color:#ddd;}
+.city{margin-top:6px;color:#888;font-size:12px;}
 
 .button{
     display:block;
     margin-top:10px;
-    padding:10px;
     text-align:center;
-    background:#fff;
-    color:#000;
-    text-decoration:none;
+    background:white;
+    color:black;
+    padding:10px;
     border-radius:8px;
+    text-decoration:none;
     font-weight:bold;
 }
 
 .loading{
-    color:#777;
+    padding:80px;
     text-align:center;
-    padding:60px;
+    color:#777;
 }
 </style>
 </head>
@@ -92,84 +86,87 @@ main{padding:20px;}
 <body>
 
 <header>
-    <h1>VeArchive</h1>
+<h1>VeArchive</h1>
 
-    <div class="controls">
-        <input id="search" placeholder="Search...">
-        <select id="city"></select>
-        <select id="sort">
-            <option value="">Sort</option>
-            <option value="low">Price ↑</option>
-            <option value="high">Price ↓</option>
-        </select>
-    </div>
+<div class="controls">
+<input id="search" placeholder="Search..." />
+<select id="city"></select>
+<select id="sort">
+<option value="">Sort</option>
+<option value="low">Low → High</option>
+<option value="high">High → Low</option>
+</select>
+</div>
 
-    <div class="stats" id="stats">Loading...</div>
+<div id="stats">Loading...</div>
 </header>
 
 <main>
-    <div id="listings" class="loading">Loading...</div>
+<div id="listings" class="loading">Loading...</div>
 </main>
 
 <script>
 
-let items = [];
+let allItems = [];
 
 const listings = document.getElementById("listings");
-const stats = document.getElementById("stats");
 const search = document.getElementById("search");
 const city = document.getElementById("city");
 const sort = document.getElementById("sort");
+const stats = document.getElementById("stats");
 
-/* ================= IMAGE ENGINE ================= */
-
-function safeImage(url){
-    if(!url) return fallback();
-    if(url.includes(".heic")) return fallback();
-    return url.replace("http://","https://");
+function fixImage(url){
+    if(!url) return "";
+    return url
+        .replace("http://", "https://")
+        .trim();
 }
 
-function fallback(){
-    return "https://via.placeholder.com/600x800?text=No+Image";
+function fallbackImage(img){
+    img.onerror = null;
+    img.src = "https://via.placeholder.com/600x800?text=No+Image";
 }
 
-/* ================= RENDER ================= */
+function buildCities(){
+    const set = new Set(allItems.map(i => i.city).filter(Boolean));
+    city.innerHTML = `<option value="">All Cities</option>`;
+    [...set].sort().forEach(c=>{
+        const o=document.createElement("option");
+        o.value=c;
+        o.textContent=c;
+        city.appendChild(o);
+    });
+}
 
-function render(data){
+function render(items){
 
-    stats.textContent = `${data.length} listings`;
+    stats.textContent = `${items.length} listings`;
 
-    if(!data.length){
+    if(!items.length){
         listings.innerHTML = `<div class="loading">No results</div>`;
         return;
     }
 
     listings.innerHTML = `<div class="grid"></div>`;
-    const grid = document.querySelector(".grid");
+    const grid = listings.querySelector(".grid");
 
-    data.forEach(item => {
+    items.forEach(item=>{
 
         const card = document.createElement("div");
         card.className = "card";
 
+        const imgUrl = fixImage(item.pictureUrl);
+
         card.innerHTML = `
-            <img 
-                src="${safeImage(item.pictureUrl)}"
-                loading="lazy"
-                onerror="
-                    if(!this.dataset.retry){
-                        this.dataset.retry=1;
-                        this.src='https://images.weserv.nl/?url=' + encodeURIComponent('${safeImage(item.pictureUrl)}'.replace('https://',''));
-                    } else {
-                        this.src='https://via.placeholder.com/600x800?text=No+Image';
-                    }
-                "
-            >
+            <img src="${imgUrl}"
+                 loading="lazy"
+                 referrerpolicy="no-referrer"
+                 onerror="fallbackImage(this)">
 
             <div class="content">
                 <div class="price">¥${(item.price||0).toLocaleString()}</div>
-                <div>${item.title || 'Untitled'}</div>
-                <div class="city">${item.city || ''}</div>
+                <div class="title">${item.title || "Untitled"}</div>
+                <div class="city">${item.city || ""}</div>
 
                 <a class="button" href="${item.url}" target="_blank">
                     View
@@ -181,81 +178,48 @@ function render(data){
     });
 }
 
-/* ================= FILTER ================= */
-
 function update(){
 
-    let filtered = [...items];
+    let items = [...allItems];
 
-    const q = search.value.toLowerCase();
+    const q = search.value.toLowerCase().trim();
 
     if(q){
-        filtered = filtered.filter(i =>
-            (i.title||'').toLowerCase().includes(q)
+        items = items.filter(i =>
+            (i.title||"").toLowerCase().includes(q)
         );
     }
 
     if(city.value){
-        filtered = filtered.filter(i => i.city === city.value);
+        items = items.filter(i => i.city === city.value);
     }
 
     if(sort.value === "low"){
-        filtered.sort((a,b)=>a.price-b.price);
+        items.sort((a,b)=>(a.price||0)-(b.price||0));
     }
 
     if(sort.value === "high"){
-        filtered.sort((a,b)=>b.price-a.price);
+        items.sort((a,b)=>(b.price||0)-(a.price||0));
     }
 
-    render(filtered);
+    render(items);
 }
-
-/* ================= CITIES ================= */
-
-function loadCities(){
-
-    const cities = [...new Set(items.map(i=>i.city).filter(Boolean))];
-
-    city.innerHTML = `<option value="">All Cities</option>`;
-
-    cities.forEach(c=>{
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        city.appendChild(opt);
-    });
-}
-
-/* ================= LOAD JSON ================= */
 
 async function load(){
-
     try{
+        const res = await fetch("./data.json?cache=" + Date.now());
+        const data = await res.json();
 
-        const res = await fetch("./data.json", {cache:"no-store"});
+        allItems = data.items || [];
 
-        if(!res.ok) throw new Error(res.status);
-
-        const json = await res.json();
-
-        items = json.items || [];
-
-        loadCities();
+        buildCities();
         update();
 
-    } catch(err){
-
-        console.error(err);
-
-        listings.innerHTML = `
-            <div class="loading">
-                Failed to load data.json
-            </div>
-        `;
+    } catch(e){
+        console.error(e);
+        listings.innerHTML = "Failed to load data.json";
     }
 }
-
-/* ================= EVENTS ================= */
 
 search.addEventListener("input", update);
 city.addEventListener("change", update);
