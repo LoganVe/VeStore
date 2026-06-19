@@ -9,87 +9,134 @@
 <style>
 body{
     margin:0;
-    padding:30px;
+    padding:24px;
     background:#0b0b0b;
     color:white;
     font-family:Arial,sans-serif;
 }
 
+/* HEADER */
 h1{
     text-align:center;
-    margin-bottom:25px;
+    margin-bottom:18px;
+    letter-spacing:1px;
+    font-weight:600;
 }
 
+/* SEARCH */
 #search{
     width:100%;
-    max-width:700px;
+    max-width:720px;
     display:block;
-    margin:0 auto 25px;
-    padding:12px;
-    border-radius:10px;
-    border:1px solid #333;
+    margin:0 auto 20px;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid #222;
     background:#151515;
     color:white;
+    outline:none;
 }
 
+/* GRID */
 .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-    gap:20px;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:18px;
 }
 
+/* CARD (Grailed-ish) */
 .card{
-    background:#151515;
-    border-radius:12px;
+    background:#121212;
+    border-radius:14px;
     overflow:hidden;
+    transition:transform .2s ease, box-shadow .2s ease;
 }
 
+.card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 10px 30px rgba(0,0,0,0.6);
+}
+
+/* IMAGE */
 .card img{
     width:100%;
-    height:350px;
+    height:320px;
     object-fit:cover;
     background:#000;
+    opacity:0;
+    transition:opacity .35s ease;
 }
 
-.content{ padding:15px; }
+/* CONTENT */
+.content{
+    padding:12px 12px 14px;
+}
 
 .price{
     color:#00ff99;
-    font-size:22px;
-    font-weight:bold;
+    font-size:18px;
+    font-weight:700;
 }
 
 .title{
-    margin-top:10px;
-    line-height:1.4;
+    margin-top:6px;
+    font-size:14px;
+    line-height:1.3;
+    color:#eaeaea;
 }
 
 .meta{
-    color:#999;
+    color:#888;
     font-size:12px;
-    margin-top:10px;
+    margin-top:6px;
 }
 
+/* BUTTON */
 .button{
     display:block;
     text-align:center;
-    margin-top:15px;
+    margin-top:12px;
     padding:10px;
     background:white;
     color:black;
     text-decoration:none;
-    border-radius:8px;
+    border-radius:10px;
+    font-size:13px;
 }
 
+/* SKELETON LOADING */
+.skeleton{
+    animation:pulse 1.2s infinite ease-in-out;
+    background:linear-gradient(90deg,#151515,#222,#151515);
+    background-size:200% 100%;
+}
+
+.skel-img{
+    height:320px;
+    border-radius:14px 14px 0 0;
+}
+
+.skel-line{
+    height:12px;
+    margin:10px 12px;
+    border-radius:6px;
+}
+
+@keyframes pulse{
+    0%{background-position:200% 0;}
+    100%{background-position:-200% 0;}
+}
+
+/* ERROR */
 .error{
-    color:red;
+    color:#ff5555;
     text-align:center;
     padding:40px;
 }
 
-.loading{
-    text-align:center;
-    padding:40px;
+/* FADE IN */
+.fade-in{
+    opacity:1 !important;
 }
 </style>
 </head>
@@ -98,125 +145,135 @@ h1{
 
 <h1>VeArchive</h1>
 
-<input type="text" id="search" placeholder="Search listings...">
+<input id="search" type="text" placeholder="Search listings...">
 
-<div id="listings">
-    <div class="loading">Loading listings...</div>
-</div>
+<div id="listings"></div>
 
 <script>
 
 const listingsContainer = document.getElementById("listings");
 let allListings = [];
 
-function getImageUrl(url){
-
+/* ---------- IMAGE FIX ---------- */
+function cleanUrl(url){
     if(!url) return "";
 
     return url
         .replace("http://", "https://")
-        .replace(".heic", ".jpg");
+        .replace(".heic", ".jpg")
+        .trim();
 }
 
-function getFallback(url){
-
-    return "https://wsrv.nl/?url=" +
-        encodeURIComponent(url) +
-        "&output=jpg";
+function proxy(url){
+    return "https://wsrv.nl/?url=" + encodeURIComponent(url) + "&output=jpg";
 }
 
+/* ---------- SKELETON UI ---------- */
+function showSkeletons(){
+    listingsContainer.innerHTML = "";
+    const grid = document.createElement("div");
+    grid.className = "grid";
+
+    for(let i=0;i<12;i++){
+        const sk = document.createElement("div");
+        sk.className = "card";
+
+        sk.innerHTML = `
+            <div class="skeleton skel-img"></div>
+            <div class="skeleton skel-line" style="width:60%"></div>
+            <div class="skeleton skel-line" style="width:40%"></div>
+        `;
+
+        grid.appendChild(sk);
+    }
+
+    listingsContainer.appendChild(grid);
+}
+
+/* ---------- LOAD DATA ---------- */
 async function loadData(){
+
+    showSkeletons();
 
     try{
 
-        const response = await fetch("data.json");
+        const res = await fetch("data.json");
+        if(!res.ok) throw new Error("data.json not found");
 
-        if(!response.ok){
-            throw new Error("Could not find data.json");
-        }
-
-        const json = await response.json();
+        const json = await res.json();
 
         allListings = Array.isArray(json)
             ? json
             : (json.items || []);
 
-        renderListings(allListings);
+        render(allListings);
 
-    } catch(error){
-
-        console.error(error);
-
-        listingsContainer.innerHTML = `
-            <div class="error">
-                Failed to load data.json<br><br>
-                Open F12 → Console
-            </div>
-        `;
+    } catch(err){
+        console.error(err);
+        listingsContainer.innerHTML = `<div class="error">Failed to load data.json</div>`;
     }
 }
 
-function renderListings(data){
+/* ---------- RENDER ---------- */
+function render(data){
 
-    if(!data.length){
-        listingsContainer.innerHTML = `<div class="error">No listings found</div>`;
-        return;
-    }
-
-    listingsContainer.innerHTML = '<div class="grid"></div>';
-    const grid = document.querySelector(".grid");
+    const grid = document.createElement("div");
+    grid.className = "grid";
 
     data.forEach(item => {
 
-        const rawUrl = item.pictureUrl || item.image || "";
-        const cleanUrl = getImageUrl(rawUrl);
+        const raw = item.pictureUrl || item.image || "";
+        const url = cleanUrl(raw);
 
         const card = document.createElement("div");
         card.className = "card";
 
-        card.innerHTML = `
-            <img
-                src="${cleanUrl}"
-                loading="lazy"
-                referrerpolicy="no-referrer"
-                alt="${item.title || ""}"
-            >
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.alt = item.title || "";
+        img.src = url;
 
-            <div class="content">
-                <div class="price">¥${item.price || 0}</div>
-                <div class="title">${item.title || "Untitled"}</div>
-                <div class="meta">${item.city || ""}</div>
-
-                <a class="button" href="${item.url || '#'}" target="_blank">
-                    View Listing
-                </a>
-            </div>
-        `;
-
-        const img = card.querySelector("img");
+        img.onload = () => {
+            img.classList.add("fade-in");
+        };
 
         img.onerror = () => {
 
-            const proxy = getFallback(cleanUrl);
+            const fallback = proxy(url);
 
-            // try proxy first
             const test = new Image();
 
             test.onload = () => {
-                img.src = proxy;
+                img.src = fallback;
             };
 
             test.onerror = () => {
                 img.src = "https://via.placeholder.com/400x300?text=No+Image";
             };
 
-            test.src = proxy;
+            test.src = fallback;
         };
 
+        const content = document.createElement("div");
+        content.className = "content";
+
+        content.innerHTML = `
+            <div class="price">¥${item.price || 0}</div>
+            <div class="title">${item.title || "Untitled"}</div>
+            <div class="meta">${item.city || ""}</div>
+            <a class="button" href="${item.url || '#'}" target="_blank">View Listing</a>
+        `;
+
+        card.appendChild(img);
+        card.appendChild(content);
         grid.appendChild(card);
     });
+
+    listingsContainer.innerHTML = "";
+    listingsContainer.appendChild(grid);
 }
 
+/* ---------- SEARCH ---------- */
 document.getElementById("search").addEventListener("input", e => {
 
     const term = e.target.value.toLowerCase();
@@ -225,7 +282,7 @@ document.getElementById("search").addEventListener("input", e => {
         (item.title || "").toLowerCase().includes(term)
     );
 
-    renderListings(filtered);
+    render(filtered);
 });
 
 loadData();
