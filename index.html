@@ -17,7 +17,6 @@ body{
 h1{
     text-align:center;
     margin-bottom:25px;
-    letter-spacing:1px;
 }
 
 #search{
@@ -42,11 +41,6 @@ h1{
     background:#151515;
     border-radius:12px;
     overflow:hidden;
-    transition:0.2s;
-}
-
-.card:hover{
-    transform:translateY(-3px);
 }
 
 .card img{
@@ -57,9 +51,7 @@ h1{
     display:block;
 }
 
-.content{
-    padding:12px;
-}
+.content{ padding:12px; }
 
 .price{
     color:#00ff99;
@@ -70,7 +62,6 @@ h1{
 .title{
     margin-top:8px;
     font-size:14px;
-    line-height:1.3;
 }
 
 .meta{
@@ -88,13 +79,6 @@ h1{
     color:black;
     text-decoration:none;
     border-radius:8px;
-    font-size:13px;
-}
-
-.error{
-    text-align:center;
-    padding:40px;
-    color:red;
 }
 </style>
 </head>
@@ -109,60 +93,36 @@ h1{
 
 <script>
 
-const listingsContainer = document.getElementById("listings");
-let allListings = [];
+const container = document.getElementById("listings");
 
-/* 🔥 SAFE IMAGE HANDLER */
-function fixImage(url){
+let all = [];
+
+/* CLEAN IMAGE HANDLER */
+function getImage(url){
     if(!url) return "";
 
-    // force https
-    url = url.replace("http://", "https://");
-
-    // Alibaba images often block hotlinking → use proxy
-    return "https://images.weserv.nl/?url=" + encodeURIComponent(url);
-}
-
-async function loadData(){
-    try{
-        const res = await fetch("./data.json");
-        if(!res.ok) throw new Error("data.json not found");
-
-        const data = await res.json();
-
-        allListings = data.items || data;
-
-        render(allListings);
-
-    } catch(err){
-        console.error(err);
-        listingsContainer.innerHTML = "Failed to load data.json";
-    }
+    // force https only
+    return url.replace("http://", "https://");
 }
 
 function render(data){
 
-    if(!data.length){
-        listingsContainer.innerHTML = "No items";
-        return;
-    }
-
-    listingsContainer.innerHTML = `<div class="grid"></div>`;
-    const grid = document.querySelector(".grid");
+    container.innerHTML = `<div class="grid"></div>`;
+    const grid = container.querySelector(".grid");
 
     data.forEach(item => {
 
-        const imgUrl = fixImage(item.pictureUrl);
+        const img = getImage(item.pictureUrl);
 
         const card = document.createElement("div");
         card.className = "card";
 
         card.innerHTML = `
             <img
-                src="${imgUrl}"
+                src="${img}"
                 loading="lazy"
-                alt="${item.title || ""}"
-                onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'"
+                alt=""
+                onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300?text=No+Image';"
             >
 
             <div class="content">
@@ -180,15 +140,32 @@ function render(data){
     });
 }
 
-/* search */
+async function load(){
+    try{
+        const res = await fetch("./data.json");
+        const json = await res.json();
+
+        all = json.items || json;
+        render(all);
+
+    } catch(e){
+        console.log(e);
+        container.innerHTML = "Failed to load data.json";
+    }
+}
+
+/* search without re-breaking DOM too hard */
 document.getElementById("search").addEventListener("input", (e) => {
     const t = e.target.value.toLowerCase();
-    render(allListings.filter(x =>
+
+    const filtered = all.filter(x =>
         (x.title || "").toLowerCase().includes(t)
-    ));
+    );
+
+    render(filtered);
 });
 
-loadData();
+load();
 
 </script>
 
