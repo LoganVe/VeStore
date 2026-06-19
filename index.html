@@ -51,9 +51,7 @@ h1{
     background:#000;
 }
 
-.content{
-    padding:15px;
-}
+.content{ padding:15px; }
 
 .price{
     color:#00ff99;
@@ -100,11 +98,7 @@ h1{
 
 <h1>VeArchive</h1>
 
-<input
-    type="text"
-    id="search"
-    placeholder="Search listings..."
->
+<input type="text" id="search" placeholder="Search listings...">
 
 <div id="listings">
     <div class="loading">Loading listings...</div>
@@ -112,36 +106,44 @@ h1{
 
 <script>
 
-const listingsContainer =
-    document.getElementById("listings");
-
+const listingsContainer = document.getElementById("listings");
 let allListings = [];
+
+function getImageUrl(url){
+
+    if(!url) return "";
+
+    return url
+        .replace("http://", "https://")
+        .replace(".heic", ".jpg");
+}
+
+function getFallback(url){
+
+    return "https://wsrv.nl/?url=" +
+        encodeURIComponent(url) +
+        "&output=jpg";
+}
 
 async function loadData(){
 
     try{
 
-        const response =
-            await fetch("data.json");
+        const response = await fetch("data.json");
 
         if(!response.ok){
-            throw new Error(
-                "Could not find data.json"
-            );
+            throw new Error("Could not find data.json");
         }
 
-        const json =
-            await response.json();
+        const json = await response.json();
 
-        allListings =
-            Array.isArray(json)
+        allListings = Array.isArray(json)
             ? json
             : (json.items || []);
 
         renderListings(allListings);
 
-    }
-    catch(error){
+    } catch(error){
 
         console.error(error);
 
@@ -157,102 +159,74 @@ async function loadData(){
 function renderListings(data){
 
     if(!data.length){
-
-        listingsContainer.innerHTML =
-            `<div class="error">
-                No listings found
-            </div>`;
-
+        listingsContainer.innerHTML = `<div class="error">No listings found</div>`;
         return;
     }
 
-    listingsContainer.innerHTML =
-        '<div class="grid"></div>';
+    listingsContainer.innerHTML = '<div class="grid"></div>';
+    const grid = document.querySelector(".grid");
 
-    const grid =
-        document.querySelector(".grid");
+    data.forEach(item => {
 
-    data.forEach(item=>{
+        const rawUrl = item.pictureUrl || item.image || "";
+        const cleanUrl = getImageUrl(rawUrl);
 
-        const image =
-            item.pictureUrl ||
-            item.image ||
-            "";
-
-        const card =
-            document.createElement("div");
-
+        const card = document.createElement("div");
         card.className = "card";
 
         card.innerHTML = `
             <img
-  class="product-image"
-  src="${(item.pictureUrl || '')
-    .replace('http://', 'https://')
-    .replace('.heic', '.jpg')}"
-  loading="lazy"
-  referrerpolicy="no-referrer"
-  alt="${item.title}"
-  onerror="
-    this.onerror=null;
+                src="${cleanUrl}"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                alt="${item.title || ""}"
+            >
 
-    const fallback = 'https://wsrv.nl/?url=' + encodeURIComponent(this.src) + '&output=jpg';
-
-    const testImg = new Image();
-
-    testImg.onload = () => { this.src = fallback; };
-
-    testImg.onerror = () => { this.src = 'https://via.placeholder.com/400x300?text=No+Image'; };
-
-    testImg.src = fallback;
-  "
->
             <div class="content">
+                <div class="price">¥${item.price || 0}</div>
+                <div class="title">${item.title || "Untitled"}</div>
+                <div class="meta">${item.city || ""}</div>
 
-                <div class="price">
-                    ¥${item.price || 0}
-                </div>
-
-                <div class="title">
-                    ${item.title || "Untitled"}
-                </div>
-
-                <div class="meta">
-                    ${item.city || ""}
-                </div>
-
-                <a
-                    class="button"
-                    href="${item.url || '#'}"
-                    target="_blank"
-                >
+                <a class="button" href="${item.url || '#'}" target="_blank">
                     View Listing
                 </a>
-
             </div>
         `;
 
-        grid.appendChild(card);
+        const img = card.querySelector("img");
 
+        img.onerror = () => {
+
+            const proxy = getFallback(cleanUrl);
+
+            // try proxy first
+            const test = new Image();
+
+            test.onload = () => {
+                img.src = proxy;
+            };
+
+            test.onerror = () => {
+                img.src = "https://via.placeholder.com/400x300?text=No+Image";
+            };
+
+            test.src = proxy;
+        };
+
+        grid.appendChild(card);
     });
 }
 
-document
-    .getElementById("search")
-    .addEventListener("input",e=>{
+document.getElementById("search").addEventListener("input", e => {
 
-        const term =
-            e.target.value.toLowerCase();
+    const term = e.target.value.toLowerCase();
 
-        const filtered =
-            allListings.filter(item=>
-                (item.title || "")
-                .toLowerCase()
-                .includes(term)
-            );
+    const filtered = allListings.filter(item =>
+        (item.title || "").toLowerCase().includes(term)
+    );
 
-        renderListings(filtered);
-    });
+    renderListings(filtered);
+});
 
 loadData();
 
