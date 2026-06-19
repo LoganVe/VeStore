@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>VeArchive</title>
 
 <style>
@@ -15,21 +14,18 @@ body{
     font-family:Arial,sans-serif;
 }
 
-/* HEADER */
 h1{
     text-align:center;
-    margin-bottom:18px;
-    letter-spacing:1px;
+    margin-bottom:20px;
     font-weight:600;
 }
 
-/* SEARCH */
 #search{
     width:100%;
     max-width:720px;
     display:block;
     margin:0 auto 20px;
-    padding:12px 14px;
+    padding:12px;
     border-radius:12px;
     border:1px solid #222;
     background:#151515;
@@ -37,39 +33,33 @@ h1{
     outline:none;
 }
 
-/* GRID */
 .grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-    gap:18px;
+    gap:16px;
 }
 
-/* CARD (Grailed-ish) */
 .card{
     background:#121212;
     border-radius:14px;
     overflow:hidden;
-    transition:transform .2s ease, box-shadow .2s ease;
+    transition:0.2s ease;
 }
 
 .card:hover{
-    transform:translateY(-4px);
-    box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    transform:translateY(-3px);
 }
 
-/* IMAGE */
 .card img{
     width:100%;
     height:320px;
     object-fit:cover;
     background:#000;
-    opacity:0;
-    transition:opacity .35s ease;
+    display:block;
 }
 
-/* CONTENT */
 .content{
-    padding:12px 12px 14px;
+    padding:12px;
 }
 
 .price{
@@ -79,64 +69,33 @@ h1{
 }
 
 .title{
-    margin-top:6px;
     font-size:14px;
-    line-height:1.3;
+    margin-top:6px;
     color:#eaeaea;
 }
 
 .meta{
-    color:#888;
     font-size:12px;
+    color:#888;
     margin-top:6px;
 }
 
-/* BUTTON */
 .button{
     display:block;
-    text-align:center;
     margin-top:12px;
     padding:10px;
     background:white;
     color:black;
+    text-align:center;
     text-decoration:none;
     border-radius:10px;
     font-size:13px;
 }
 
-/* SKELETON LOADING */
-.skeleton{
-    animation:pulse 1.2s infinite ease-in-out;
-    background:linear-gradient(90deg,#151515,#222,#151515);
-    background-size:200% 100%;
-}
-
-.skel-img{
-    height:320px;
-    border-radius:14px 14px 0 0;
-}
-
-.skel-line{
-    height:12px;
-    margin:10px 12px;
-    border-radius:6px;
-}
-
-@keyframes pulse{
-    0%{background-position:200% 0;}
-    100%{background-position:-200% 0;}
-}
-
-/* ERROR */
 .error{
-    color:#ff5555;
     text-align:center;
+    color:red;
     padding:40px;
-}
-
-/* FADE IN */
-.fade-in{
-    opacity:1 !important;
 }
 </style>
 </head>
@@ -152,43 +111,44 @@ h1{
 <script>
 
 const listingsContainer = document.getElementById("listings");
+
 let allListings = [];
 
-/* ---------------- IMAGE ENGINE ---------------- */
+/* ---------------- IMAGE FIX SYSTEM ---------------- */
 
-function buildImageChain(url){
-    if(!url) return "";
+function getImageChain(url){
+    if(!url) return null;
 
     const clean = url
         .replace("http://", "https://")
         .replace(".heic", ".jpg");
 
-    // 1. primary proxy (reliable)
-    const wsrv = "https://wsrv.nl/?url=" + encodeURIComponent(clean) + "&output=jpg";
-
-    // 2. fallback proxy (backup)
-    const imagesw = "https://images.weserv.nl/?url=" + encodeURIComponent(clean);
-
-    // return chain (we try wsrv first, then fallback in onerror)
-    return { clean, wsrv, imagesw };
+    return {
+        primary: "https://wsrv.nl/?url=" + encodeURIComponent(clean) + "&output=jpg",
+        backup: "https://images.weserv.nl/?url=" + encodeURIComponent(clean),
+        raw: clean
+    };
 }
 
-/* ---------------- DATA LOAD ---------------- */
+/* ---------------- LOAD DATA ---------------- */
 
 async function loadData(){
     try{
         const res = await fetch("data.json");
-        if(!res.ok) throw new Error("data.json missing");
+        if(!res.ok) throw new Error("data.json not found");
 
         const json = await res.json();
 
-        allListings = Array.isArray(json) ? json : (json.items || []);
+        allListings = Array.isArray(json)
+            ? json
+            : (json.items || []);
 
         render(allListings);
 
     } catch(err){
         console.error(err);
-        listingsContainer.innerHTML = "<div style='color:red;text-align:center'>Failed to load</div>";
+        listingsContainer.innerHTML =
+            "<div class='error'>Failed to load data.json</div>";
     }
 }
 
@@ -201,7 +161,7 @@ function render(data){
 
     data.forEach(item => {
 
-        const imgData = buildImageChain(item.pictureUrl || item.image);
+        const imgData = getImageChain(item.pictureUrl || item.image);
 
         const card = document.createElement("div");
         card.className = "card";
@@ -210,18 +170,21 @@ function render(data){
         img.loading = "lazy";
         img.alt = item.title || "";
 
-        // start with proxy 1
-        img.src = imgData.wsrv;
+        // START IMAGE
+        if(imgData){
+            img.src = imgData.primary;
+        } else {
+            img.src = "https://via.placeholder.com/400x300?text=No+Image";
+        }
 
-        // STEP 1 failure → try second proxy
+        // FALLBACK CHAIN
         img.onerror = () => {
 
-            if(img.src === imgData.wsrv){
-                img.src = imgData.imagesw;
+            if(imgData && img.src === imgData.primary){
+                img.src = imgData.backup;
                 return;
             }
 
-            // STEP 2 failure → final fallback
             img.src = "https://via.placeholder.com/400x300?text=No+Image";
         };
 
@@ -232,7 +195,7 @@ function render(data){
             <div class="price">¥${item.price || 0}</div>
             <div class="title">${item.title || "Untitled"}</div>
             <div class="meta">${item.city || ""}</div>
-            <a class="button" href="${item.url || '#'}" target="_blank">View Listing</a>
+            <a class="button" href="${item.url || "#"}" target="_blank">View Listing</a>
         `;
 
         card.appendChild(img);
@@ -240,6 +203,7 @@ function render(data){
         grid.appendChild(card);
     });
 
+    // IMPORTANT: full replace (fixes "not updating")
     listingsContainer.innerHTML = "";
     listingsContainer.appendChild(grid);
 }
@@ -256,6 +220,8 @@ document.getElementById("search").addEventListener("input", e => {
 
     render(filtered);
 });
+
+/* ---------------- INIT ---------------- */
 
 loadData();
 
