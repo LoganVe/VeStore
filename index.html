@@ -134,12 +134,18 @@ const cityFilter = document.getElementById("cityFilter");
 const sort = document.getElementById("sort");
 
 /* =========================
-   GET BASE PATH (GITHUB SAFE)
+   SIMPLE + RELIABLE PATH
 ========================= */
-function getBasePath() {
-    // Works on GitHub Pages + localhost
-    const path = window.location.pathname;
-    return path.substring(0, path.lastIndexOf("/") + 1);
+function getDataUrl() {
+    // This works on GitHub Pages ALWAYS if data.json is in root
+    const isGitHub = location.hostname.includes("github.io");
+
+    if (isGitHub) {
+        // safest assumption: same folder as index.html
+        return "./data.json";
+    }
+
+    return "./data.json";
 }
 
 /* =========================
@@ -151,7 +157,7 @@ function image(url){
 }
 
 /* =========================
-   CITY DROPDOWN
+   CITY FILTER
 ========================= */
 function populateCities(){
     const cities = [...new Set(allItems.map(x => x.city).filter(Boolean))].sort();
@@ -159,10 +165,10 @@ function populateCities(){
     cityFilter.innerHTML = `<option value="">All Cities</option>`;
 
     cities.forEach(city=>{
-        const option = document.createElement("option");
-        option.value = city;
-        option.textContent = city;
-        cityFilter.appendChild(option);
+        const opt = document.createElement("option");
+        opt.value = city;
+        opt.textContent = city;
+        cityFilter.appendChild(opt);
     });
 }
 
@@ -206,7 +212,7 @@ function render(items){
 }
 
 /* =========================
-   FILTER / SORT
+   FILTERS
 ========================= */
 function update(){
 
@@ -215,15 +221,13 @@ function update(){
     const q = search.value.toLowerCase().trim();
 
     if(q){
-        items = items.filter(item =>
-            (item.title || "").toLowerCase().includes(q)
+        items = items.filter(i =>
+            (i.title || "").toLowerCase().includes(q)
         );
     }
 
     if(cityFilter.value){
-        items = items.filter(item =>
-            item.city === cityFilter.value
-        );
+        items = items.filter(i => i.city === cityFilter.value);
     }
 
     if(sort.value === "low"){
@@ -238,47 +242,40 @@ function update(){
 }
 
 /* =========================
-   LOAD DATA.JSON (GITHUB SAFE)
+   LOAD DATA (DEBUG VERSION)
 ========================= */
 async function load(){
 
     try{
 
-        const base = getBasePath();
-        const url = base + "data.json";
+        const url = getDataUrl();
 
-        console.log("Loading:", url);
+        console.log("Fetching:", url);
 
-        const response = await fetch(url, {
-            cache: "no-store"
-        });
+        const res = await fetch(url);
 
-        if(!response.ok){
-            throw new Error("HTTP " + response.status + " - " + url);
+        if(!res.ok){
+            throw new Error("HTTP " + res.status);
         }
 
-        const data = await response.json();
+        const data = await res.json();
 
-        allItems =
-            Array.isArray(data)
-            ? data
-            : (data.items || []);
+        allItems = Array.isArray(data) ? data : (data.items || []);
 
-        if(!Array.isArray(allItems)){
-            throw new Error("Invalid JSON format");
-        }
+        console.log("Loaded items:", allItems.length);
 
         populateCities();
         update();
 
-    }catch(error){
+    }catch(err){
 
-        console.error("LOAD ERROR:", error);
+        console.error("LOAD FAILED:", err);
 
         listings.innerHTML = `
             <div class="loading">
                 Failed to load data.json<br><br>
-                Check console (F12)
+                ${err.message}<br><br>
+                Open DevTools (F12) → Console
             </div>
         `;
     }
